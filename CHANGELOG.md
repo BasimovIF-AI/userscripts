@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [GreasyFork Auto-Publisher Bridge - 1.1.0] - 2026-09-27
+### Added
+- Rich bilingual Markdown descriptions for all SteamGifts scripts (features, math formulas, links).
+- Robust fallback selection for GreasyFork additional info textarea.
+- Reliable Markdown radio button activation.
+- Interactive control buttons in overlay: **`[Publish Now]`** and **`[Pause / Review]`**.
+- Changelog autofill on script update pages.
+
+---
+
 ## [GreasyFork Auto-Publisher Bridge - 1.0.0] - 2026-09-27
 ### Added
 - Automated script code fetching from GitHub raw endpoints via `GM_xmlhttpRequest`.
 - URL query triggers (`auto_publish`, `auto_update`, `auto_url`, `repo`, `user`).
 - Dual editor support (native `textarea` & `CodeMirror` syntax highlighting).
-- Floating UI overlay with status indicator and 3-second cancelable countdown timer.
-- Automatic Markdown additional description population.
-- English and Russian internationalization.
+- Floating UI overlay with status indicator and countdown timer.
