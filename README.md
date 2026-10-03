@@ -12,6 +12,8 @@
 
 A collection of multipurpose Tampermonkey & Violentmonkey userscripts for web automation, workflow acceleration, and browser productivity across various platforms.
 
+> **Documentation:** [AGENTS.md](AGENTS.md) | [CHANGELOG.md](CHANGELOG.md) | [build.ps1](build.ps1)
+
 ---
 
 ## 📦 Scripts Catalog

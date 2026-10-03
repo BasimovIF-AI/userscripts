@@ -5,6 +5,7 @@ desktop.ini
 
 # Release archives
 *.zip
+archives/
 
 # Temporary & Editor files
 *.log
