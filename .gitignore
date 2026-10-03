@@ -1,14 +1,52 @@
-# Operating System
+# ==========================================
+# Strict Deny-All Whitelist for Userscripts Monorepo
+# ==========================================
+
+# 1. Запретить всё по умолчанию (Default Deny):
+/*
+
+# 2. Белый список: регламентные файлы в корне репозитория
+!.gitignore
+!AGENTS.md
+!README.md
+!README.ru.md
+!CHANGELOG.md
+!ARCHITECTURE.md
+!LICENSE
+!build.ps1
+!walkthrough.md
+
+# 3. Белый список: разрешенные папки скриптов и их содержимое
+!aistudio-folders/
+!aistudio-folders/**
+!greasyfork-auto-publisher/
+!greasyfork-auto-publisher/**
+!huggingface-notes/
+!huggingface-notes/**
+!lestrades-toolkit/
+!lestrades-toolkit/**
+!school-pocket-money/
+!school-pocket-money/**
+!steam-licenses/
+!steam-licenses/**
+!steamdb-links/
+!steamdb-links/**
+!steamgifts/
+!steamgifts/**
+!wb-ozon-comparator/
+!wb-ozon-comparator/**
+
+# 4. Защитные фильтры внутри папок скриптов:
+aistudio_prompts_catalog.json
+aistudio_sorted_folders.json
+archives/
+*.zip
+*.log
+*.tmp
+*.bak
+.env
+*.env
+credentials.*
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# Release archives
-*.zip
-archives/
-
-# Temporary & Editor files
-*.log
-.vscode/
-.idea/
-*.tmp

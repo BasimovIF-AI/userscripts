@@ -1,56 +1,29 @@
-# Userscripts Collection
+# 🚀 Userscripts Central Monorepo
 
-<p align="center">
-  <b>English</b> | <a href="README.ru.md">Русский</a>
-</p>
+Единый централизованный моно-репозиторий авторских пользовательских скриптов (Userscripts для Tampermonkey / Violentmonkey) пользователя [BasimovIF-AI](https://github.com/BasimovIF-AI).
 
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="https://github.com/BasimovIF-AI/userscripts"><img src="https://img.shields.io/badge/GitHub-BasimovIF--AI%2Fuserscripts-181717?logo=github" alt="GitHub Repository"></a>
-  <a href="https://greasyfork.org/en/users/1522624-basimovif-ai"><img src="https://img.shields.io/badge/GreasyFork-BasimovIF--AI-red.svg" alt="GreasyFork Profile"></a>
-</p>
-
-A collection of multipurpose Tampermonkey & Violentmonkey userscripts for web automation, workflow acceleration, and browser productivity across various platforms.
-
-> **Documentation:** [AGENTS.md](AGENTS.md) | [CHANGELOG.md](CHANGELOG.md) | [build.ps1](build.ps1)
+Каждый скрипт разрабатывается и отлаживается в изолированной среде, а чистовые релизы и документация консолидируются в данном репозитории.
 
 ---
 
-## 📦 Scripts Catalog
+## 📦 Каталог юзерскриптов
 
-| Script | Version | Direct Install (Raw) | Description |
-| :--- | :---: | :---: | :--- |
-| **GreasyFork Auto-Publisher Bridge** | `1.0.0` | [Install](https://raw.githubusercontent.com/BasimovIF-AI/userscripts/main/greasyfork-auto-publisher.user.js) | Automates script publishing and version updating on GreasyFork via URL query triggers. |
-
----
-
-## 🚀 Script Highlights
-
-### GreasyFork - Auto-Publisher Bridge (`v1.0.0`)
-- **Target URLs**: `https://greasyfork.org/*/script_versions/new*`, `https://greasyfork.org/*/scripts/*/versions/new*`
-- **Key Features**:
-  - Automatically fetches source code from GitHub repositories when opened with URL parameters.
-  - Inserts code into GreasyFork form (supports plain textareas and CodeMirror editors).
-  - Automatically selects Markdown formatting for additional info.
-  - Floating UI overlay with a 3-second countdown and a manual cancellation button (`[Cancel]`).
-  - Automatically submits the form.
-
-#### Usage Example:
-Opening this URL in your browser will automatically fetch, fill, and submit the script:
-```text
-https://greasyfork.org/ru/script_versions/new?auto_publish=steamgifts-chance-per-point.user.js
-```
+| Каталог | Назначение / Платформа | Версия | Описание |
+|---|---|---|---|
+| [`greasyfork-auto-publisher/`](./greasyfork-auto-publisher/) | GreasyFork Bridge | v1.1.0 | Автоматизация загрузки, заполнения форм и публикации скриптов на платформе GreasyFork. |
+| [`steamgifts/`](./steamgifts/) | SteamGifts Suite | v1.1.0 | Пакет из 4 скриптов: расчет шанса на очко, статистика групп, авто-выбор региона, копирование победителей. |
+| [`aistudio-folders/`](./aistudio-folders/) | Google AI Studio | v1.5.0 | Древовидная организация промптов, поиск, каталогизация и быстрый доступ к промптам в интерфейсе AI Studio. |
+| [`wb-ozon-comparator/`](./wb-ozon-comparator/) | Wildberries / Ozon | v1.0.0 | Сравнение цен, характеристик и остатков товаров между маркетплейсами Wildberries и Ozon. |
+| [`steam-licenses/`](./steam-licenses/) | Steam Store & Account | v1.4.0 | Менеджер лицензий Steam: проверка наличия, массовая активация и фильтрация библиотеки. |
+| [`steamdb-links/`](./steamdb-links/) | Steam Store | v1.2.0 | Добавление прямых ссылок на SteamDB на страницах магазина Steam. |
+| [`huggingface-notes/`](./huggingface-notes/) | Hugging Face | v1.1.0 | Заметки, теги и закладки для моделей, датасетов и спейсов на платформе Hugging Face. |
+| [`school-pocket-money/`](./school-pocket-money/) | Электронный дневник | v1.0.0 | Расчет карманных денег по оценкам, виджеты и экспорт успеваемости из электронного дневника. |
+| [`lestrades-toolkit/`](./lestrades-toolkit/) | Lestrades API & Web | v1.0.0 | Инструментарий интеграции с Lestrades: сбор данных, сессии и аналитика обмена ключами. |
 
 ---
 
-## 🛠️ Installation
+## 🛠️ Архитектура и стандарты разработки
 
-1. Install [Tampermonkey](https://www.tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/).
-2. Click **Install** in the table above.
-3. Confirm installation in your browser extension.
-
----
-
-## 📄 License
-
-This repository is licensed under the [MIT License](LICENSE).
+- **Среда выполнения:** Tampermonkey / Violentmonkey в браузерах Chrome, Firefox, Edge.
+- **Стандарты документации (rev 8):** Каждый каталог содержит операционный мануал `AGENTS.md`, `README.md`, журнал изменений `CHANGELOG.md` и скрипт сборки `build.ps1`.
+- **Безопасность (Strict Deny-All Allowlist):** В репозиторий категорически запрещен коммит временных дампов, личных заметок, баз данных или токенов авторизации.

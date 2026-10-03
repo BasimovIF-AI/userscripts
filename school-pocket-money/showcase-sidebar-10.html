@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Витрина 10 визуальных стилей сайдбара (3-вкладочный Native Drawer v1.3.0)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Имитация дневника слева */
+        .diary-mock {
+            flex: 1;
+            padding: 24px;
+            max-width: calc(100% - 440px);
+            transition: max-width 0.25s ease;
+        }
+        .diary-mock.full-width { max-width: 100%; }
+
+        .header-mock {
+            background: white; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
+        }
+        .selection-mock { display: flex; gap: 8px; }
+        .selection-btn {
+            padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer;
+            border: 1px solid #cbd5e1; background: #e2e8f0; color: #475569;
+        }
+        .selection-btn.active {
+            background: #0284c7; color: white; border-color: #0284c7;
+        }
+
+        .blue-nav-mock {
+            background: #0284c7; border-radius: 8px; padding: 8px 16px; display: flex; gap: 16px;
+            color: white; font-size: 13px; font-weight: 700; margin-bottom: 20px;
+        }
+        .blue-nav-item.active { background: rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 4px; }
+        
+        .banner-mock {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 12px; padding: 24px; color: white; margin-bottom: 20px;
+        }
+        .grades-table-mock {
+            background: white; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .lesson-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+        .mark-badge { display: inline-block; font-weight: 800; padding: 3px 8px; border-radius: 5px; margin-left: 4px; }
+        .mark-badge.five { background: #dcfce7; color: #166534; }
+        .mark-badge.four { background: #e0f2fe; color: #0369a1; }
+        .mark-badge.three { background: #fee2e2; color: #b91c1c; }
+
+        /* Плавающий ярлык */
+        #pm-drawer-trigger {
+            position: fixed; right: 0; top: 45%; transform: translateY(-50%); z-index: 999998;
+            background: linear-gradient(135deg, #0284c7, #0369a1); color: white;
+            font-size: 13px; font-weight: 800; padding: 12px 14px 12px 16px; border-radius: 20px 0 0 20px;
+            box-shadow: -4px 4px 18px rgba(0,0,0,0.25); cursor: pointer; display: flex; align-items: center;
+            user-select: none; border: 2px solid rgba(255,255,255,0.4); border-right: none;
+            transition: all 0.2s;
+        }
+        #pm-drawer-trigger:hover { padding-right: 20px; background: linear-gradient(135deg, #0369a1, #075985); }
+
+        /* Контейнер правого сайдбара */
+        #pm-sidebar-container {
+            position: fixed; top: 0; right: 0; width: 440px; height: 100vh; z-index: 999999; box-sizing: border-box;
+            display: flex; flex-direction: column; background: white; color: #0f172a;
+            box-shadow: -10px 0 35px rgba(0,0,0,0.2); transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #pm-sidebar-container.closed { transform: translateX(100%); }
+
+        .pm-topbar { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+        .pm-style-badges { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+        .pm-style-btn {
+            width: 28px; height: 28px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.15);
+            background: white; color: #334155; font-size: 12px; font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+        }
+        .pm-style-btn.active { background: #0284c7; color: white; border-color: #0284c7; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4); }
+
+        .pm-nav-tabs-row { display: flex; border-radius: 8px; padding: 3px; flex-shrink: 0; }
+        .pm-tab-btn {
+            flex: 1; text-align: center; padding: 7px 4px; font-size: 12px; font-weight: 800;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s; user-select: none;
+        }
+
+        .pm-content-scroll { flex: 1; overflow-y: auto; padding: 16px; box-sizing: border-box; }
+        .pm-card { padding: 14px; margin-bottom: 12px; }
+        .pm-pill {
+            padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Имитация дневника -->
+    <div class="diary-mock" id="diary-box">
+        <div class="header-mock">
+            <div>
+                <div style="font-size: 18px; font-weight: 800;">МБОУ "СОШ № 13"</div>
+                <div style="font-size: 12px; color: #64748b;">Электронный дневник ХМАО-Югра</div>
+            </div>
+            <!-- Переключатель детей в шапке дневника -->
+            <div class="selection-mock" id="child-selection-box">
+                <button class="selection-btn active" onclick="selectChild('Юлиана')">Юлиана (9В)</button>
+                <button class="selection-btn" onclick="selectChild('Артём')">Артём (7Г)</button>
+                <button class="selection-btn" onclick="selectChild('Диана')">Диана (3Д)</button>
+            </div>
+        </div>
+
+        <div class="blue-nav-mock">
+            <span>🏠 Главная</span>
+            <span class="blue-nav-item active">Дневник</span>
+            <span>Успеваемость</span>
+            <span>Обратная связь</span>
+            <span>Планирование</span>
+            <span>Каникулы</span>
+            <span>Питание</span>
+        </div>
+
+        <div class="banner-mock">
+            <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 6px;">Учебный период: 15 сен – 21 сен (С3)</h2>
+            <p style="opacity: 0.9; font-size: 13px;">Тестирование правого 3-вкладочного сайдбара с расчётом в рублях и 10 дизайнами.</p>
+        </div>
+
+        <div class="grades-table-mock">
+            <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px;">Уроки и оценки за неделю (Дневник онлайн)</h3>
+            <div class="lesson-row">
+                <span><b>Алгебра (к=2.0)</b> • Квадратичные неравенства</span>
+                <div><span class="mark-badge five">5</span></div>
+            </div>
+            <div class="lesson-row">
+                <span><b>Русский язык (к=2.0)</b> • Контрольный диктант</span>
+                <div><span class="mark-badge five">5</span> <span class="mark-badge five">5</span></div>
+            </div>
+            <div class="lesson-row">
+                <span><b>Биология (к=1.0)</b> • Строение клетки</span>
+                <div><span class="mark-badge three">3</span></div>
+            </div>
+            <div class="lesson-row">
+                <span><b>Физика (к=1.0)</b> • Лабораторная работа</span>
+                <div><span class="mark-badge four">4</span></div>
+            </div>
+            <div class="lesson-row">
+                <span><b>Химия (к=1.0)</b> • Неметаллы</span>
+                <div><span class="mark-badge four">4</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ярлык -->
+    <div id="pm-drawer-trigger" onclick="toggleSidebar()">
+        <span>💰 Карманные деньги</span>
+    </div>
+
+    <!-- Сайдбар -->
+    <div id="pm-sidebar-container"></div>
+
+    <script>
+        const presets = {
+            "Юлиана": {
+                name: "Басимова Юлиана", zeroMark: 3.7, age: 14, classNum: 9, inflationCoeff: 12.485,
+                level: 5, levelTitle: "Рыцарь Математики", xp: 820, nextLevelXp: 1000, streakWeeks: 3,
+                targetGoal: { title: "Новый планшет и стилус", target: 15000, saved: 4200 },
+                subjects: [
+                    { name: "Алгебра", coeff: 2.0 }, { name: "Англ. яз.", coeff: 1.0 }, { name: "Биология", coeff: 1.0 },
+                    { name: "География", coeff: 1.0 }, { name: "Геометрия", coeff: 2.0 }, { name: "Информатика", coeff: 1.0 },
+                    { name: "История", coeff: 1.0 }, { name: "Литература", coeff: 1.0 }, { name: "Русский язык", coeff: 2.0 },
+                    { name: "Физика", coeff: 1.0 }, { name: "Химия", coeff: 1.0 }
+                ]
+            },
+            "Артём": {
+                name: "Басимов Артём", zeroMark: 3.7, age: 12, classNum: 7, inflationCoeff: 12.5,
+                level: 4, levelTitle: "Страж Естествознания", xp: 540, nextLevelXp: 800, streakWeeks: 2,
+                targetGoal: { title: "Игровые беспроводные наушники", target: 6000, saved: 2100 },
+                subjects: [
+                    { name: "Англ. яз.", coeff: 1.0 }, { name: "Биология", coeff: 1.0 }, { name: "География", coeff: 1.0 },
+                    { name: "История", coeff: 1.0 }, { name: "Математика", coeff: 2.0 }, { name: "Русский язык", coeff: 2.0 },
+                    { name: "Физика", coeff: 1.0 }, { name: "Физкультура", coeff: 0.5 }
+                ]
+            },
+            "Диана": {
+                name: "Басимова Диана", zeroMark: 3.7, age: 8, classNum: 3, inflationCoeff: 12.5,
+                level: 3, levelTitle: "Юная Художница", xp: 320, nextLevelXp: 500, streakWeeks: 4,
+                targetGoal: { title: "Набор для рисования и мольберт", target: 4500, saved: 1800 },
+                subjects: [
+                    { name: "Англ. яз.", coeff: 1.0 }, { name: "ИЗО", coeff: 0.5 }, { name: "Литер. чтение", coeff: 0.5 },
+                    { name: "Математика", coeff: 2.0 }, { name: "Окруж. мир", coeff: 0.5 }, { name: "Русский язык", coeff: 2.0 }, { name: "Труд", coeff: 0.5 }
+                ]
+            }
+        };
+
+        const sampleWeeks = [
+            { weekCode: "С1", dateRange: "1 сен – 7 сен", marks: { "Геометрия": { weightedSum: 4.0, totalWeight: 1.0 }, "Физика": { weightedSum: 4.0, totalWeight: 1.0 }, "Русский язык": { weightedSum: 4.0, totalWeight: 1.0 } } },
+            { weekCode: "С2", dateRange: "8 сен – 14 сен", marks: { "Алгебра": { weightedSum: 5.0, totalWeight: 1.0 }, "Англ. яз.": { weightedSum: 6.0, totalWeight: 2.0 }, "Биология": { weightedSum: 4.0, totalWeight: 1.0 }, "Русский язык": { weightedSum: 4.0, totalWeight: 1.0 }, "Физика": { weightedSum: 2.0, totalWeight: 1.0 }, "Химия": { weightedSum: 5.0, totalWeight: 1.0 } } },
+            { weekCode: "С3", dateRange: "15 сен – 21 сен", marks: { "Алгебра": { weightedSum: 5.0, totalWeight: 1.0 }, "Англ. яз.": { weightedSum: 5.0, totalWeight: 1.0 }, "Биология": { weightedSum: 3.0, totalWeight: 1.0 }, "География": { weightedSum: 8.0, totalWeight: 2.0 }, "Геометрия": { weightedSum: 4.0, totalWeight: 1.0 }, "История": { weightedSum: 4.0, totalWeight: 1.0 }, "Русский язык": { weightedSum: 5.0, totalWeight: 2.0 }, "Физика": { weightedSum: 4.0, totalWeight: 1.0 }, "Химия": { weightedSum: 4.0, totalWeight: 1.0 } } }
+        ];
+
+        const STYLE_NAMES = {
+            1: "1. Neo-Fintech (Необанк)",
+            2: "2. RPG Quest (Геймификация)",
+            3: "3. ED-Native (Стиль Дневника)",
+            4: "4. Cyberpunk Dark (OLED Неон)",
+            5: "5. Glassmorphism (Матовое стекло)",
+            6: "6. Piggy Bank (Тёплая копилка)",
+            7: "7. Smart Receipt (Кассовый чек)",
+            8: "8. Apple iOS (Cupertino Clean)",
+            9: "9. Dashboard Pro (Аналитический)",
+            10: "10. Arcade 8-Bit (Ретро-игра)"
+        };
+
+        let state = {
+            isOpen: true,
+            currentStyle: 1,
+            activeTab: 'calc',
+            activeChildKey: "Юлиана",
+            activeWeekIndex: 2,
+            paidRecords: {
+                "С1": { amount: 182, paid: true, note: "Выплачено (перерасчет)" },
+                "С2": { amount: 198, paid: true, note: "Выплачено" },
+                "С3": { amount: 230, paid: false, note: "" }
+            }
+        };
+
+        function calculateWeek(child, weekMarks) {
+            const baseIncome = Math.round(child.age * child.inflationCoeff * 100) / 100;
+            const rubPerPoint = baseIncome * 0.2;
+
+            let totalRublesEarnings = 0;
+            const subjectsDetail = [];
+
+            child.subjects.forEach(sub => {
+                const data = weekMarks[sub.name];
+                if (data && data.totalWeight > 0) {
+                    const avg = Math.round((data.weightedSum / data.totalWeight) * 100) / 100;
+                    const deltaCoeff = Math.round((avg - child.zeroMark) * sub.coeff * data.totalWeight * 100) / 100;
+                    const moneyRub = Math.round(rubPerPoint * deltaCoeff * 100) / 100;
+                    totalRublesEarnings += moneyRub;
+
+                    subjectsDetail.push({
+                        name: sub.name, coeff: sub.coeff, avg, weight: data.totalWeight, deltaCoeff, moneyRub,
+                        status: moneyRub > 0 ? 'bonus' : (moneyRub < 0 ? 'penalty' : 'neutral')
+                    });
+                } else {
+                    subjectsDetail.push({
+                        name: sub.name, coeff: sub.coeff, avg: null, weight: null, deltaCoeff: null, moneyRub: null,
+                        status: 'none'
+                    });
+                }
+            });
+
+            totalRublesEarnings = Math.round(totalRublesEarnings * 100) / 100;
+            const totalPayout = Math.max(0, Math.round((baseIncome + totalRublesEarnings) * 100) / 100);
+
+            const bestSubject = [...subjectsDetail].filter(s => s.moneyRub !== null).sort((a,b) => b.moneyRub - a.moneyRub)[0];
+            const hasAces = subjectsDetail.some(s => s.avg >= 4.8 && s.coeff >= 2.0);
+            const allPositive = subjectsDetail.filter(s => s.moneyRub !== null).every(s => s.moneyRub >= 0);
+
+            const achievements = [];
+            if (hasAces) achievements.push({ icon: "🎯", title: "Снайпер 5.0", desc: "Отличный балл по ключевому предмету!" });
+            if (bestSubject && bestSubject.moneyRub > 0) achievements.push({ icon: "🚀", title: "Прорыв недели", desc: `${bestSubject.name} принёс +${bestSubject.moneyRub} ₽!` });
+            if (allPositive) achievements.push({ icon: "🛡️", title: "Без хвостов", desc: "Все предметы сданы без убытка!" });
+
+            return {
+                baseIncome, rubPerPoint, totalRublesEarnings, totalPayout, subjectsDetail, bestSubject, achievements
+            };
+        }
+
+        function getTheme(styleId) {
+            switch(Number(styleId)) {
+                case 1:
+                    return {
+                        bg: "#ffffff", text: "#0f172a", subtext: "#64748b", border: "1px solid #e2e8f0",
+                        topbarBg: "#f8fafc", navBg: "#f1f5f9", navActiveBg: "#ffffff", navActiveColor: "#0284c7",
+                        cardBg: "#f8fafc", cardBorder: "1px solid #e2e8f0", accent: "#0284c7",
+                        plusBg: "#dcfce7", plusColor: "#15803d", minusBg: "#fee2e2", minusColor: "#b91c1c",
+                        radius: "12px", font: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    };
+                case 2:
+                    return {
+                        bg: "#1e1b4b", text: "#f8fafc", subtext: "#c7d2fe", border: "2px solid #6366f1",
+                        topbarBg: "#312e81", topbarText: "#facc15", navBg: "#3730a3", navActiveBg: "#f59e0b", navActiveColor: "#000000",
+                        cardBg: "#2e2a72", cardBorder: "1px solid #4338ca", accent: "#f59e0b",
+                        plusBg: "#14532d", plusColor: "#4ade80", minusBg: "#7f1d1d", minusColor: "#f87171",
+                        radius: "16px", font: '"Plus Jakarta Sans", sans-serif'
+                    };
+                case 3:
+                    return {
+                        bg: "#ffffff", text: "#222222", subtext: "#666666", border: "1px solid #cbd5e1",
+                        topbarBg: "#0284c7", topbarText: "#ffffff", navBg: "rgba(0,0,0,0.06)", navActiveBg: "#0284c7", navActiveColor: "#ffffff",
+                        cardBg: "#ffffff", cardBorder: "1px solid #e5e7eb", accent: "#0284c7",
+                        plusBg: "#e0f2fe", plusColor: "#0369a1", minusBg: "#fee2e2", minusColor: "#dc2626",
+                        radius: "4px", font: '"Open Sans", Arial, sans-serif'
+                    };
+                case 4:
+                    return {
+                        bg: "#090d16", text: "#f8fafc", subtext: "#94a3b8", border: "1px solid #1e293b",
+                        topbarBg: "#0f172a", topbarText: "#38bdf8", navBg: "#1e293b", navActiveBg: "#10b981", navActiveColor: "#000000",
+                        cardBg: "#111827", cardBorder: "1px solid #1f2937", accent: "#10b981",
+                        plusBg: "#064e3b", plusColor: "#34d399", minusBg: "#881337", minusColor: "#fb7185",
+                        radius: "10px", font: '"Inter", monospace, sans-serif'
+                    };
+                case 5:
+                    return {
+                        bg: "rgba(255, 255, 255, 0.88)", backdrop: "blur(20px)", text: "#1e1b4b", subtext: "#6b7280", border: "1px solid rgba(255,255,255,0.6)",
+                        topbarBg: "rgba(99, 102, 241, 0.1)", navBg: "rgba(255,255,255,0.5)", navActiveBg: "linear-gradient(135deg, #6366f1, #8b5cf6)", navActiveColor: "#ffffff",
+                        cardBg: "rgba(255, 255, 255, 0.65)", cardBorder: "1px solid rgba(255,255,255,0.8)", accent: "#6366f1",
+                        plusBg: "#dcfce7", plusColor: "#15803d", minusBg: "#fee2e2", minusColor: "#b91c1c",
+                        radius: "18px", font: '"Plus Jakarta Sans", sans-serif'
+                    };
+                case 6:
+                    return {
+                        bg: "#fffbeb", text: "#78350f", subtext: "#92400e", border: "2px solid #fde68a",
+                        topbarBg: "linear-gradient(135deg, #f59e0b, #d97706)", topbarText: "#ffffff", navBg: "rgba(254, 243, 199, 0.8)", navActiveBg: "#f59e0b", navActiveColor: "#ffffff",
+                        cardBg: "#ffffff", cardBorder: "2px solid #fcd34d", accent: "#d97706",
+                        plusBg: "#fef3c7", plusColor: "#b45309", minusBg: "#fee2e2", minusColor: "#b91c1c",
+                        radius: "20px", font: '"Nunito", "Comic Sans MS", sans-serif'
+                    };
+                case 7:
+                    return {
+                        bg: "#fafaf9", text: "#1c1917", subtext: "#78716c", border: "1px dashed #a8a29e",
+                        topbarBg: "#f5f5f4", navBg: "#e7e5e4", navActiveBg: "#292524", navActiveColor: "#fafaf9",
+                        cardBg: "#ffffff", cardBorder: "1px dashed #d6d3d1", accent: "#292524",
+                        plusBg: "#f5f5f4", plusColor: "#166534", minusBg: "#f5f5f4", minusColor: "#dc2626",
+                        radius: "0px", font: '"Courier New", Courier, monospace'
+                    };
+                case 8:
+                    return {
+                        bg: "#f2f2f7", text: "#000000", subtext: "#8e8e93", border: "none",
+                        topbarBg: "#ffffff", navBg: "rgba(118, 118, 128, 0.12)", navActiveBg: "#ffffff", navActiveColor: "#007aff",
+                        cardBg: "#ffffff", cardBorder: "none", cardShadow: "0 2px 8px rgba(0,0,0,0.04)", accent: "#007aff",
+                        plusBg: "#e8f5e9", plusColor: "#2e7d32", minusBg: "#ffebee", minusColor: "#c62828",
+                        radius: "22px", font: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif'
+                    };
+                case 9:
+                    return {
+                        bg: "#ffffff", text: "#0f172a", subtext: "#64748b", border: "1px solid #cbd5e1",
+                        topbarBg: "#1e293b", topbarText: "#f8fafc", navBg: "#334155", navActiveBg: "#38bdf8", navActiveColor: "#0f172a",
+                        cardBg: "#f8fafc", cardBorder: "1px solid #e2e8f0", accent: "#0284c7",
+                        plusBg: "#dcfce7", plusColor: "#15803d", minusBg: "#fee2e2", minusColor: "#b91c1c",
+                        radius: "6px", font: '"Inter", "Segoe UI", sans-serif'
+                    };
+                case 10:
+                    return {
+                        bg: "#18181b", text: "#f4f4f5", subtext: "#a1a1aa", border: "3px solid #e11d48",
+                        topbarBg: "#27272a", topbarText: "#fb7185", navBg: "#3f3f46", navActiveBg: "#e11d48", navActiveColor: "#ffffff",
+                        cardBg: "#27272a", cardBorder: "2px solid #52525b", accent: "#e11d48",
+                        plusBg: "#14532d", plusColor: "#86efac", minusBg: "#881337", minusColor: "#fda4af",
+                        radius: "0px", font: '"Courier New", monospace'
+                    };
+                default:
+                    return getTheme(1);
+            }
+        }
+
+        function renderSidebar() {
+            const box = document.getElementById('pm-sidebar-container');
+            const diary = document.getElementById('diary-box');
+            box.style.width = '440px';
+            diary.style.maxWidth = 'calc(100% - 440px)';
+
+            const child = presets[state.activeChildKey] || presets["Юлиана"];
+            const week = sampleWeeks[state.activeWeekIndex] || sampleWeeks[2];
+            const calc = calculateWeek(child, week.marks);
+            const record = state.paidRecords[week.weekCode] || { amount: calc.totalPayout, paid: false, note: "" };
+            const tm = getTheme(state.currentStyle);
+
+            box.style.background = tm.bg;
+            box.style.backdropFilter = tm.backdrop || 'none';
+            box.style.color = tm.text;
+            box.style.fontFamily = tm.font;
+            box.style.borderLeft = tm.border;
+
+            box.innerHTML = `
+                <!-- ШАПКА: 10 Стилей + Название + Закрыть -->
+                <div class="pm-topbar" style="background: ${tm.topbarBg}; color: ${tm.topbarText || tm.text}; border-bottom: 1px solid rgba(0,0,0,0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 10px; text-transform: uppercase; font-weight: 800; opacity: 0.8; letter-spacing: 0.5px;">10 стилей макета №1</div>
+                            <div style="font-size: 14px; font-weight: 800; margin-top: 1px;">
+                                ${STYLE_NAMES[state.currentStyle]}
+                            </div>
+                        </div>
+                        <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; font-weight: 700; cursor: pointer; color: inherit; padding: 4px;">✕</button>
+                    </div>
+
+                    <div class="pm-style-badges">
+                        <span style="font-size: 11px; font-weight: 700; opacity: 0.8; margin-right: 2px;">Стиль:</span>
+                        ${[1,2,3,4,5,6,7,8,9,10].map(n => `
+                            <button class="pm-style-btn ${state.currentStyle === n ? 'active' : ''}" onclick="setStyle(${n})">${n}</button>
+                        `).join('')}
+                    </div>
+
+                    <!-- 3 ВКЛАДКИ МАКЕТА №1 -->
+                    <div class="pm-nav-tabs-row" style="background: ${tm.navBg};">
+                        <div class="pm-tab-btn" style="${state.activeTab === 'calc' ? `background: ${tm.navActiveBg}; color: ${tm.navActiveColor}; box-shadow: 0 2px 6px rgba(0,0,0,0.1);` : 'color: inherit;'}" onclick="setTab('calc')">
+                            📊 Расчёт
+                        </div>
+                        <div class="pm-tab-btn" style="${state.activeTab === 'pay' ? `background: ${tm.navActiveBg}; color: ${tm.navActiveColor}; box-shadow: 0 2px 6px rgba(0,0,0,0.1);` : 'color: inherit;'}" onclick="setTab('pay')">
+                            💳 Оплата
+                        </div>
+                        <div class="pm-tab-btn" style="${state.activeTab === 'settings' ? `background: ${tm.navActiveBg}; color: ${tm.navActiveColor}; box-shadow: 0 2px 6px rgba(0,0,0,0.1);` : 'color: inherit;'}" onclick="setTab('settings')">
+                            ⚙️ Настройки
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ТЕЛО ВКЛАДКИ -->
+                <div class="pm-content-scroll">
+                    ${state.activeTab === 'calc' ? renderTabCalc(child, week, calc, record, tm) : ''}
+                    ${state.activeTab === 'pay' ? renderTabPay(child, week, calc, record, tm) : ''}
+                    ${state.activeTab === 'settings' ? renderTabSettings(child, tm) : ''}
+                </div>
+            `;
+        }
+
+        function renderTabCalc(child, week, calc, record, tm) {
+            return `
+                <!-- ГЕЙМИФИКАЦИЯ: Уровень, XP и Стрик -->
+                <div class="pm-card" style="background: ${tm.cardBg}; border: ${tm.cardBorder}; border-radius: ${tm.radius}; box-shadow: ${tm.cardShadow || 'none'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div>
+                            <span style="font-size: 13px; font-weight: 800;">⭐ Уровень ${child.level}: ${child.levelTitle}</span>
+                        </div>
+                        <span style="font-size: 11px; font-weight: 800; background: #fef08a; color: #854d0e; padding: 2px 8px; border-radius: 12px;">
+                            🔥 Стрик: ${child.streakWeeks} нед. в плюсе!
+                        </span>
+                    </div>
+                    <div style="font-size: 11px; color: ${tm.subtext}; margin-bottom: 4px;">
+                        Опыт: <b>${child.xp} / ${child.nextLevelXp} XP</b> (+${calc.totalRublesEarnings > 0 ? 50 : 10} XP за неделю)
+                    </div>
+                    <div style="background: rgba(0,0,0,0.08); height: 6px; border-radius: 3px; overflow: hidden;">
+                        <div style="background: ${tm.accent}; width: ${(child.xp / child.nextLevelXp)*100}%; height: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Селектор недель -->
+                <div style="display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto;">
+                    ${sampleWeeks.map((w, idx) => `
+                        <div class="pm-pill" style="${state.activeWeekIndex === idx ? `background: ${tm.accent}; color: white; border: none;` : `background: ${tm.cardBg}; border: ${tm.cardBorder}; color: inherit;`}" onclick="setWeek(${idx})">
+                            ${w.weekCode}
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- ИТОГИ НЕДЕЛИ: База B24, Рубли за оценки (строка 24), К выплате (строка 25) -->
+                <div class="pm-card" style="background: ${tm.cardBg}; border: ${tm.cardBorder}; border-radius: ${tm.radius}; box-shadow: ${tm.cardShadow || 'none'};">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 12px; color: ${tm.subtext};">Базовый доход (B24 = ${child.age} × ${child.inflationCoeff}):</span>
+                        <span style="font-size: 13px; font-weight: 800;">${calc.baseIncome} ₽</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 12px; color: ${tm.subtext};">Заработок за оценки (Строка 24):</span>
+                        <span style="font-size: 13px; font-weight: 800; color: ${calc.totalRublesEarnings >= 0 ? tm.plusColor : tm.minusColor};">
+                            ${calc.totalRublesEarnings >= 0 ? '+' : ''}${calc.totalRublesEarnings} ₽
+                        </span>
+                    </div>
+                    <hr style="border: none; border-top: 1px dashed rgba(0,0,0,0.15); margin: 8px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <span style="font-size: 14px; font-weight: 800;">Итого к выплате (Строка 25):</span>
+                        <span style="font-size: 24px; font-weight: 900; color: #16a34a;">${calc.totalPayout} ₽</span>
+                    </div>
+                </div>
+
+                <!-- СТРОКА 26: Факт выплаты -->
+                <div class="pm-card" style="background: ${record.paid ? '#f0fdf4' : tm.cardBg}; border: ${record.paid ? '1px solid #86efac' : tm.cardBorder}; border-radius: ${tm.radius};">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: ${tm.subtext}; margin-bottom: 4px;">Журнал выплат (Строка 26)</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 15px; font-weight: 800; color: ${record.paid ? '#166534' : tm.text};">
+                                ${record.paid ? `✅ Выплачено: ${record.amount} ₽` : `⏳ Ожидает: ${calc.totalPayout} ₽`}
+                            </div>
+                            <div style="font-size: 11px; color: ${tm.subtext}; margin-top: 2px;">
+                                ${record.note || 'Статус не подтверждён'}
+                            </div>
+                        </div>
+                        <button class="pm-pill" style="border: 1px solid #cbd5e1; background: white; color: #334155;" onclick="togglePaid('${week.weekCode}', ${calc.totalPayout})">
+                            ${record.paid ? 'Сбросить' : 'Подтвердить'}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- АЧИВКИ НЕДЕЛИ (ГЕЙМИФИКАЦИЯ) -->
+                ${calc.achievements.length > 0 ? `
+                    <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: ${tm.subtext}; margin-bottom: 6px;">Достижения недели</div>
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px;">
+                        ${calc.achievements.map(a => `
+                            <div style="background: ${tm.cardBg}; border: ${tm.cardBorder}; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                <span style="font-size: 16px;">${a.icon}</span>
+                                <div><b>${a.title}</b> — <span style="color: ${tm.subtext};">${a.desc}</span></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <!-- ПОПРЕДМЕТНЫЙ СПИСОК: РУБЛИ ВМЕСТО КОЭФФИЦИЕНТОВ -->
+                <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: ${tm.subtext}; margin-bottom: 6px;">
+                    Заработок / Убыток по предметам (Норматив 3.7)
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    ${calc.subjectsDetail.map(s => `
+                        <div style="background: ${tm.cardBg}; border: ${tm.cardBorder}; border-radius: ${tm.radius}; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: ${tm.cardShadow || 'none'};">
+                            <div>
+                                <div style="font-size: 13px; font-weight: 700;">${s.name}</div>
+                                <div style="font-size: 11px; color: ${tm.subtext};">
+                                    Ср.балл: <b>${s.avg !== null ? s.avg : '—'}</b> • Вес: ${s.weight || '—'}
+                                </div>
+                            </div>
+                            <div>
+                                ${s.moneyRub !== null ? `
+                                    <span style="background: ${s.moneyRub > 0 ? tm.plusBg : (s.moneyRub < 0 ? tm.minusBg : 'rgba(0,0,0,0.06)')}; color: ${s.moneyRub > 0 ? tm.plusColor : (s.moneyRub < 0 ? tm.minusColor : tm.subtext)}; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px;">
+                                        ${s.moneyRub > 0 ? '+' : ''}${s.moneyRub} ₽
+                                    </span>
+                                ` : `<span style="color: ${tm.subtext}; font-size: 11px;">Нет оценок</span>`}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderTabPay(child, week, calc, record, tm) {
+            const amt = record.paid ? record.amount : calc.totalPayout;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://qr.nspk.ru/pm-${amt}&margin=2`;
+
+            return `
+                <div style="text-align: center; padding: 10px 0;">
+                    <div style="font-size: 11px; font-weight: 800; color: ${tm.subtext}; text-transform: uppercase;">Сумма к переводу (${week.weekCode})</div>
+                    <div style="font-size: 38px; font-weight: 900; color: #16a34a; margin: 6px 0;">${amt} ₽</div>
+                    <div style="font-size: 12px; color: ${tm.subtext}; margin-bottom: 16px;">Получатель: <b>${child.name}</b></div>
+
+                    <!-- QR СБП -->
+                    <div style="background: white; padding: 16px; border-radius: ${tm.radius}; border: ${tm.cardBorder}; display: inline-block; box-shadow: ${tm.cardShadow || '0 4px 12px rgba(0,0,0,0.06)'}; margin-bottom: 16px;">
+                        <img src="${qrUrl}" width="180" height="180" alt="QR СБП" style="display: block;" />
+                        <div style="font-size: 11px; font-weight: 700; color: #475569; margin-top: 8px;">Сканируйте приложением банка</div>
+                    </div>
+
+                    <div style="max-width: 320px; margin: 0 auto;">
+                        <button style="width: 100%; padding: 14px; border-radius: 10px; background: #16a34a; color: white; font-size: 13px; font-weight: 800; border: none; cursor: pointer;"
+                                onclick="togglePaid('${week.weekCode}', ${amt})">
+                            ${record.paid ? '✅ Выплата уже зафиксирована (Сбросить)' : 'Подтвердить перевод (Строка 26)'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTabSettings(child, tm) {
+            return `
+                <!-- Ребенок -->
+                <div class="pm-card" style="background: ${tm.cardBg}; border: ${tm.cardBorder}; border-radius: ${tm.radius};">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: ${tm.subtext}; margin-bottom: 6px;">Ребёнок (автоопределение)</div>
+                    <div style="display: flex; gap: 6px;">
+                        ${Object.keys(presets).map(k => `
+                            <button class="pm-pill ${state.activeChildKey === k ? 'active' : ''}" style="flex: 1; text-align: center; border: 1px solid #cbd5e1; ${state.activeChildKey === k ? `background: ${tm.accent}; color: white;` : 'background: white; color: #334155;'}" onclick="selectChild('${k}')">
+                                ${k}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Копилка цели (Геймификация) -->
+                <div class="pm-card" style="background: ${tm.cardBg}; border: ${tm.cardBorder}; border-radius: ${tm.radius};">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: ${tm.subtext}; margin-bottom: 4px;">Финансовая цель (Копилка)</div>
+                    <div style="font-size: 13px; font-weight: 800; margin-bottom: 2px;">🎯 ${child.targetGoal.title}</div>
+                    <div style="font-size: 12px; color: ${tm.subtext}; margin-bottom: 6px;">
+                        Накоплено: <b>${child.targetGoal.saved} ₽</b> из <b>${child.targetGoal.target} ₽</b> (${Math.round((child.targetGoal.saved / child.targetGoal.target)*100)}%)
+                    </div>
+                    <div style="background: rgba(0,0,0,0.08); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 6px;">
+                        <div style="background: #16a34a; width: ${(child.targetGoal.saved / child.targetGoal.target)*100}%; height: 100%;"></div>
+                    </div>
+                    <div style="font-size: 11px; color: #16a34a; font-weight: 700;">
+                        ⏳ При среднем доходе осталось ~${Math.ceil((child.targetGoal.target - child.targetGoal.saved) / 200)} недель!
+                    </div>
+                </div>
+
+                <!-- Формула расчёта -->
+                <div class="pm-card" style="background: ${tm.cardBg}; border: ${tm.cardBorder}; border-radius: ${tm.radius}; font-size: 12px;">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: ${tm.subtext}; margin-bottom: 6px;">Параметры формулы</div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Возраст / Класс:</span><b>${child.age} лет (${child.classNum} класс)</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Коэфф. инфляции:</span><b>${child.inflationCoeff}</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Базовая ставка (B24):</span><b>${Math.round(child.age * child.inflationCoeff * 100) / 100} ₽</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Стоимость 1 балла дельты:</span><b>${Math.round((child.age * child.inflationCoeff * 0.2) * 100) / 100} ₽</b>
+                    </div>
+                </div>
+
+                <!-- Резервное копирование (JSON) -->
+                <div class="pm-card" style="background: ${tm.cardBg}; border: ${tm.cardBorder}; border-radius: ${tm.radius};">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: ${tm.subtext}; margin-bottom: 4px;">Резервная копия (JSON)</div>
+                    <div style="font-size: 11px; color: ${tm.subtext}; margin-bottom: 8px;">Сохранение истории выплат без Excel.</div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="pm-pill" style="flex: 1; border: 1px solid #cbd5e1; background: white;" onclick="exportJSON()">📥 Экспорт</button>
+                        <button class="pm-pill" style="flex: 1; border: 1px solid #cbd5e1; background: white;" onclick="alert('Импорт JSON активен!')">📤 Импорт</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setStyle(n) { state.currentStyle = n; renderSidebar(); }
+        function setTab(t) { state.activeTab = t; renderSidebar(); }
+        function setWeek(idx) { state.activeWeekIndex = idx; renderSidebar(); }
+        function selectChild(key) {
+            state.activeChildKey = key;
+            document.querySelectorAll('.selection-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.includes(key));
+            });
+            renderSidebar();
+        }
+        function togglePaid(weekCode, amt) {
+            if (!state.paidRecords[weekCode]) state.paidRecords[weekCode] = { amount: amt, paid: false, note: "" };
+            state.paidRecords[weekCode].paid = !state.paidRecords[weekCode].paid;
+            state.paidRecords[weekCode].note = state.paidRecords[weekCode].paid ? "Выплачено" : "";
+            renderSidebar();
+        }
+        function toggleSidebar() {
+            state.isOpen = !state.isOpen;
+            const box = document.getElementById('pm-sidebar-container');
+            const diary = document.getElementById('diary-box');
+            if (state.isOpen) {
+                box.classList.remove('closed');
+                diary.classList.remove('full-width');
+            } else {
+                box.classList.add('closed');
+                diary.classList.add('full-width');
+            }
+        }
+        function copyText(txt) {
+            navigator.clipboard.writeText(txt).then(() => alert('Скопировано: ' + txt)).catch(() => prompt('Скопируйте:', txt));
+        }
+        function exportJSON() {
+            const data = { presets, paidRecords: state.paidRecords };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Карманные_деньги_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        renderSidebar();
+    </script>
+</body>
+</html>

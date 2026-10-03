@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Monorepo 2.0.0] - 2026-10-04
+### Added
+- Consolidated all standalone userscripts into a single monorepo structure:
+  - `greasyfork-auto-publisher/`
+  - `steamgifts/` (4 automation scripts & publishing tools)
+  - `aistudio-folders/`
+  - `wb-ozon-comparator/`
+  - `steam-licenses/`
+  - `steamdb-links/`
+  - `huggingface-notes/`
+  - `school-pocket-money/`
+  - `lestrades-toolkit/`
+- Implemented strict Deny-All Whitelist `.gitignore` standard (rev 8).
+- Central index showcase in `README.md`.
+
 ## [GreasyFork Auto-Publisher Bridge - 1.1.0] - 2026-09-27
 ### Added
 - Rich bilingual Markdown descriptions for all SteamGifts scripts (features, math formulas, links).

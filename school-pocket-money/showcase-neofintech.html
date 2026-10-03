@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карманные деньги — Neo-Fintech Drawer (v1.5.0)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Имитация дневника слева */
+        .diary-mock {
+            flex: 1;
+            padding: 24px;
+            max-width: calc(100% - 440px);
+            transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .diary-mock.full-width { max-width: 100%; }
+
+        .header-mock {
+            background: #ffffff; border-radius: 10px; padding: 16px 20px; margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
+        }
+        .selection-mock { display: flex; gap: 8px; }
+        .selection-btn {
+            padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer;
+            border: 1px solid #cbd5e1; background: #e2e8f0; color: #475569; transition: all 0.15s;
+        }
+        .selection-btn.active {
+            background: #0284c7; color: #ffffff; border-color: #0284c7; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+        }
+
+        .blue-nav-mock {
+            background: #0284c7; border-radius: 8px; padding: 8px 16px; display: flex; gap: 16px;
+            color: #ffffff; font-size: 13px; font-weight: 700; margin-bottom: 20px;
+        }
+        .blue-nav-item.active { background: rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 4px; }
+        
+        .banner-mock {
+            background: linear-gradient(135deg, #0284c7, #0369a1); border-radius: 12px; padding: 20px 24px; color: #ffffff; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .grades-table-mock {
+            background: #ffffff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .lesson-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+        .mark-badge { display: inline-block; font-weight: 800; padding: 3px 8px; border-radius: 5px; margin-left: 4px; font-size: 13px; }
+        .mark-badge.five { background: #dcfce7; color: #166534; }
+        .mark-badge.four { background: #e0f2fe; color: #0369a1; }
+        .mark-badge.three { background: #fef08a; color: #854d0e; }
+        .mark-badge.two { background: #fee2e2; color: #991b1b; }
+
+        /* Плавающий ярлык */
+        #pm-drawer-trigger {
+            position: fixed; right: 0; top: 45%; transform: translateY(-50%); z-index: 999998;
+            background: linear-gradient(135deg, #0284c7, #0369a1); color: #ffffff;
+            font-size: 13px; font-weight: 800; padding: 12px 14px 12px 16px; border-radius: 20px 0 0 20px;
+            box-shadow: -4px 4px 18px rgba(0,0,0,0.22); cursor: pointer; display: flex; align-items: center;
+            user-select: none; border: 2px solid rgba(255,255,255,0.4); border-right: none;
+            transition: padding 0.2s, background 0.2s;
+        }
+        #pm-drawer-trigger:hover { padding-right: 20px; background: linear-gradient(135deg, #0369a1, #075985); }
+
+        /* Контейнер правого сайдбара Neo-Fintech */
+        #pm-sidebar-container {
+            position: fixed; top: 0; right: 0; width: 440px; height: 100vh; z-index: 999999; box-sizing: border-box;
+            display: flex; flex-direction: column; background: #ffffff; color: #0f172a;
+            border-left: 1px solid #e2e8f0; box-shadow: -10px 0 35px rgba(0,0,0,0.15);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #pm-sidebar-container.closed { transform: translateX(100%); }
+
+        .pm-topbar {
+            background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 14px 16px;
+            display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;
+        }
+        .pm-nav-tabs {
+            display: flex; background: #f1f5f9; border-radius: 8px; padding: 3px; gap: 2px;
+        }
+        .pm-tab-btn {
+            flex: 1; text-align: center; padding: 8px 4px; font-size: 13px; font-weight: 800;
+            border-radius: 6px; cursor: pointer; transition: all 0.15s; user-select: none;
+            color: #64748b; background: transparent; border: none;
+        }
+        .pm-tab-btn.active {
+            background: #ffffff; color: #0284c7; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .pm-content-scroll { flex: 1; overflow-y: auto; padding: 16px; box-sizing: border-box; }
+        .pm-card {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 14px; margin-bottom: 12px; box-sizing: border-box;
+        }
+        .pm-pill {
+            padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: all 0.15s; border: 1px solid #cbd5e1;
+            background: #ffffff; color: #475569; white-space: nowrap;
+        }
+        .pm-pill.active {
+            background: #0284c7; color: #ffffff; border-color: #0284c7;
+        }
+
+        /* Модальное окно истории XP */
+        .pm-modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px);
+            z-index: 1000000; display: flex; align-items: center; justify-content: center; padding: 16px;
+            box-sizing: border-box;
+        }
+        .pm-modal-window {
+            background: #ffffff; border-radius: 16px; width: 100%; max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column;
+            max-height: 85vh; animation: pmModalIn 0.2s ease;
+        }
+        @keyframes pmModalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <!-- Имитация дневника -->
+    <div class="diary-mock" id="diary-box">
+        <div class="header-mock">
+            <div>
+                <div style="font-size: 18px; font-weight: 800; color: #0f172a;">МБОУ "СОШ № 13"</div>
+                <div style="font-size: 12px; color: #64748b;">Электронный дневник ХМАО-Югра</div>
+            </div>
+            <!-- Переключатель детей -->
+            <div class="selection-mock" id="child-selection-box">
+                <button class="selection-btn active" onclick="selectChild('Диана')">Диана (3Д)</button>
+                <button class="selection-btn" onclick="selectChild('Артём')">Артём (7Г)</button>
+                <button class="selection-btn" onclick="selectChild('Юлиана')">Юлиана (9В)</button>
+            </div>
+        </div>
+
+        <div class="blue-nav-mock">
+            <span>🏠 Главная</span>
+            <span class="blue-nav-item active">Дневник</span>
+            <span>Успеваемость</span>
+            <span>Обратная связь</span>
+            <span>Планирование</span>
+            <span>Каникулы</span>
+            <span>Питание</span>
+        </div>
+
+        <!-- Баннер открытой недели со стрелками быстрой навигации -->
+        <div class="banner-mock">
+            <div>
+                <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; opacity: 0.85;">Текущий период дневника</div>
+                <h2 id="diary-period-title" style="font-size: 20px; font-weight: 800; margin-top: 2px;">15 сен – 21 сен 2026 г.</h2>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="selection-btn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4);" onclick="navWeek(-1)">◀ Пред. неделя</button>
+                <button class="selection-btn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4);" onclick="navWeek(1)">След. неделя ▶</button>
+            </div>
+        </div>
+
+        <div class="grades-table-mock">
+            <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 12px; color: #0f172a;">Уроки и оценки за открытую неделю (Дневник онлайн)</h3>
+            <div id="diary-lessons-list">
+                <!-- Заполняется динамически -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Ярлык вызова сайдбара -->
+    <div id="pm-drawer-trigger" onclick="toggleSidebar()">
+        <span>💰 Карманные деньги</span>
+    </div>
+
+    <!-- Контейнер сайдбара Neo-Fintech -->
+    <div id="pm-sidebar-container"></div>
+
+    <!-- Контейнер модального окна истории XP -->
+    <div id="pm-xp-modal-root"></div>
+
+    <script>
+        const presets = {
+            "Диана": {
+                name: "Басимова Диана", zeroMark: 3.7, age: 8, classNum: 3, inflationCoeff: 12.5, // B24 = 100.00 ₽
+                targetGoal: { title: "Набор для рисования и мольберт", target: 4500, saved: 1800 },
+                subjects: [
+                    { name: "Англ. яз.", coeff: 1.0 }, { name: "ИЗО", coeff: 0.5 }, { name: "Литер. чтение", coeff: 0.5 },
+                    { name: "Математика", coeff: 2.0 }, { name: "Музыка", coeff: 0.5 }, { name: "Окруж. мир", coeff: 0.5 },
+                    { name: "Русский язык", coeff: 2.0 }, { name: "Труд", coeff: 0.5 }, { name: "Физкультура", coeff: 0.5 }
+                ]
+            },
+            "Артём": {
+                name: "Басимов Артём", zeroMark: 3.7, age: 12, classNum: 7, inflationCoeff: 12.5, // B24 = 150.00 ₽
+                targetGoal: { title: "Игровые беспроводные наушники", target: 6000, saved: 2100 },
+                subjects: [
+                    { name: "Англ. яз.", coeff: 1.0 }, { name: "Биология", coeff: 1.0 }, { name: "География", coeff: 1.0 },
+                    { name: "История", coeff: 1.0 }, { name: "Математика", coeff: 2.0 }, { name: "Русский язык", coeff: 2.0 },
+                    { name: "Физика", coeff: 1.0 }, { name: "Физкультура", coeff: 0.5 }
+                ]
+            },
+            "Юлиана": {
+                name: "Басимова Юлиана", zeroMark: 3.7, age: 14, classNum: 9, inflationCoeff: 12.485, // B24 = 174.79 ₽
+                targetGoal: { title: "Новый планшет и стилус", target: 15000, saved: 4200 },
+                subjects: [
+                    { name: "Алгебра", coeff: 2.0 }, { name: "Англ. яз.", coeff: 1.0 }, { name: "Биология", coeff: 1.0 },
+                    { name: "География", coeff: 1.0 }, { name: "Геометрия", coeff: 2.0 }, { name: "Информатика", coeff: 1.0 },
+                    { name: "История", coeff: 1.0 }, { name: "Русский язык", coeff: 2.0 }, { name: "Физика", coeff: 1.0 }, { name: "Химия", coeff: 1.0 }
+                ]
+            }
+        };
+
+        const LEVEL_TITLES = [
+            "Новичок знаний", "Искатель приключений", "Юный исследователь", "Страж наук", "Рыцарь Математики", "Магистр Знаний"
+        ];
+
+        // Недели дневника
+        const DIARY_WEEKS = [
+            {
+                dateRange: "1 сен – 7 сен 2026 г.",
+                marksByChild: {
+                    "Диана": { "Математика": [{ val: 5, weight: 1 }], "Русский язык": [{ val: 4, weight: 1 }] },
+                    "Артём": { "Математика": [{ val: 4, weight: 1 }], "История": [{ val: 4, weight: 1 }] },
+                    "Юлиана": { "Геометрия": [{ val: 4, weight: 1 }], "Физика": [{ val: 4, weight: 1 }] }
+                }
+            },
+            {
+                dateRange: "8 сен – 14 сен 2026 г.",
+                marksByChild: {
+                    "Диана": { "Математика": [{ val: 5, weight: 1 }], "Русский язык": [{ val: 5, weight: 1 }], "ИЗО": [{ val: 5, weight: 1 }] },
+                    "Артём": { "Англ. яз.": [{ val: 4, weight: 1 }], "Русский язык": [{ val: 4, weight: 1 }], "Физика": [{ val: 3, weight: 1 }] },
+                    "Юлиана": { "Алгебра": [{ val: 5, weight: 1 }], "Биология": [{ val: 4, weight: 1 }], "Физика": [{ val: 2, weight: 1 }], "Химия": [{ val: 5, weight: 1 }] }
+                }
+            },
+            {
+                dateRange: "15 сен – 21 сен 2026 г.",
+                marksByChild: {
+                    "Диана": { "Математика": [{ val: 5, weight: 1 }, { val: 4, weight: 1 }], "Русский язык": [{ val: 5, weight: 1 }], "Литер. чтение": [{ val: 4, weight: 1 }] },
+                    "Артём": { "Математика": [{ val: 5, weight: 1 }], "Русский язык": [{ val: 4, weight: 1 }, { val: 4, weight: 1 }], "Биология": [{ val: 3, weight: 1 }] },
+                    "Юлиана": { "Алгебра": [{ val: 5, weight: 1 }], "Русский язык": [{ val: 5, weight: 1 }, { val: 4, weight: 1 }], "Биология": [{ val: 3, weight: 1 }], "География": [{ val: 4, weight: 2 }], "Физика": [{ val: 4, weight: 1 }] }
+                }
+            }
+        ];
+
+        // Локальная база данных
+        let db = {
+            "Диана": {
+                xpLedger: [
+                    { id: "xp_1", date: "2026-09-07", week: "1 сен – 7 сен 2026 г.", amount: 50, reason: "Неделя закрыта без троек" },
+                    { id: "xp_2", date: "2026-09-14", week: "8 сен – 14 сен 2026 г.", amount: 50, reason: "Успешная неделя в плюсе (+64 ₽)" },
+                    { id: "xp_3", date: "2026-09-14", week: "8 сен – 14 сен 2026 г.", amount: 30, reason: "Ачивка: Снайпер 5.0 (Математика)" }
+                ],
+                weeks: {}
+            },
+            "Артём": {
+                xpLedger: [
+                    { id: "xp_a1", date: "2026-09-14", week: "8 сен – 14 сен 2026 г.", amount: 50, reason: "Успешная неделя в плюсе" }
+                ],
+                weeks: {}
+            },
+            "Юлиана": {
+                xpLedger: [
+                    { id: "xp_y1", date: "2026-09-07", week: "1 сен – 7 сен 2026 г.", amount: 50, reason: "Неделя в плюсе (+37 ₽)" },
+                    { id: "xp_y2", date: "2026-09-14", week: "8 сен – 14 сен 2026 г.", amount: 50, reason: "Неделя в плюсе (+51 ₽)" },
+                    { id: "xp_y3", date: "2026-09-14", week: "8 сен – 14 сен 2026 г.", amount: 30, reason: "Ачивка: Снайпер 5.0 (Алгебра)" }
+                ],
+                weeks: {}
+            }
+        };
+
+        let state = {
+            isOpen: true,
+            activeTab: 'calc',
+            activeChildKey: "Диана",
+            currentWeekIdx: 2,
+            showXpModal: false
+        };
+
+        function getTotalXp(childKey) {
+            return (db[childKey]?.xpLedger || []).reduce((sum, item) => sum + item.amount, 0);
+        }
+
+        function calculateLevelInfo(totalXp) {
+            const xp = Math.max(0, totalXp);
+            const level = Math.floor(xp / 200) + 1;
+            const currentLevelXp = xp % 200;
+            const nextLevelXp = 200;
+            const titleIndex = Math.min(level - 1, LEVEL_TITLES.length - 1);
+            return { totalXp: xp, level, currentLevelXp, nextLevelXp, levelTitle: LEVEL_TITLES[titleIndex] };
+        }
+
+        function calculateWeek(child, currentWeekMarks) {
+            const baseIncome = Math.round(child.age * child.inflationCoeff * 100) / 100;
+            const rubPerPoint = baseIncome * 0.2;
+
+            let totalRublesEarnings = 0;
+            const activeSubjects = [];
+
+            child.subjects.forEach(sub => {
+                const marksList = currentWeekMarks[sub.name];
+                // ПОКАЗЫВАЕМ ТОЛЬКО ПРЕДМЕТЫ С ОЦЕНКАМИ
+                if (marksList && marksList.length > 0) {
+                    let weightedSum = 0;
+                    let totalWeight = 0;
+
+                    const marksBreakdown = marksList.map(m => {
+                        weightedSum += m.val * m.weight;
+                        totalWeight += m.weight;
+                        const markDeltaRub = Math.round(rubPerPoint * sub.coeff * m.weight * (m.val - child.zeroMark) * 100) / 100;
+                        return { val: m.val, weight: m.weight, markDeltaRub };
+                    });
+
+                    const avg = Math.round((weightedSum / totalWeight) * 100) / 100;
+                    const subjectMoneyRub = Math.round(marksBreakdown.reduce((sum, m) => sum + m.markDeltaRub, 0) * 100) / 100;
+                    totalRublesEarnings += subjectMoneyRub;
+
+                    activeSubjects.push({
+                        name: sub.name, coeff: sub.coeff, avg, totalWeight, marks: marksBreakdown,
+                        moneyRub: subjectMoneyRub, status: subjectMoneyRub > 0 ? 'bonus' : (subjectMoneyRub < 0 ? 'penalty' : 'neutral')
+                    });
+                }
+            });
+
+            totalRublesEarnings = Math.round(totalRublesEarnings * 100) / 100;
+            const totalPayout = Math.max(0, Math.round((baseIncome + totalRublesEarnings) * 100) / 100);
+
+            const achievements = [];
+            const hasAces = activeSubjects.some(s => s.marks.some(m => m.val === 5) && s.coeff >= 2.0);
+            const bestSub = [...activeSubjects].sort((a,b) => b.moneyRub - a.moneyRub)[0];
+            const allPositive = activeSubjects.length > 0 && activeSubjects.every(s => s.moneyRub >= 0);
+
+            if (hasAces) achievements.push({ icon: "🎯", title: "Снайпер 5.0", desc: "Пятёрка по профильному предмету!" });
+            if (bestSub && bestSub.moneyRub > 0) achievements.push({ icon: "🚀", title: "Прорыв недели", desc: `${bestSub.name}: +${bestSub.moneyRub} ₽!` });
+            if (allPositive) achievements.push({ icon: "🛡️", title: "Без хвостов", desc: "Все сданные предметы в плюсе!" });
+
+            return { baseIncome, rubPerPoint, totalRublesEarnings, totalPayout, activeSubjects, achievements, hasMarks: activeSubjects.length > 0 };
+        }
+
+        function updateDiaryView() {
+            const currentWeek = DIARY_WEEKS[state.currentWeekIdx];
+            document.getElementById('diary-period-title').textContent = currentWeek.dateRange;
+
+            const lessonsList = document.getElementById('diary-lessons-list');
+            const marksObj = currentWeek.marksByChild[state.activeChildKey] || {};
+            const subjectsWithMarks = Object.keys(marksObj);
+
+            if (subjectsWithMarks.length === 0) {
+                lessonsList.innerHTML = `<div style="padding: 20px; color: #64748b; text-align: center;">На этой неделе уроки не содержат выставленных оценок.</div>`;
+                return;
+            }
+
+            lessonsList.innerHTML = subjectsWithMarks.map(subName => {
+                const marks = marksObj[subName];
+                const badges = marks.map(m => {
+                    const cls = m.val === 5 ? 'five' : (m.val === 4 ? 'four' : (m.val === 3 ? 'three' : 'two'));
+                    return `<span class="mark-badge ${cls}">${m.val}${m.weight > 1 ? `<span style="font-size:10px;">×${m.weight}</span>` : ''}</span>`;
+                }).join(' ');
+
+                return `
+                    <div class="lesson-row">
+                        <span><b>${subName}</b></span>
+                        <div>${badges}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSidebar() {
+            const box = document.getElementById('pm-sidebar-container');
+            const diary = document.getElementById('diary-box');
+
+            if (state.isOpen) {
+                box.classList.remove('closed');
+                diary.classList.remove('full-width');
+            } else {
+                box.classList.add('closed');
+                diary.classList.add('full-width');
+            }
+
+            const child = presets[state.activeChildKey] || presets["Диана"];
+            const currentWeek = DIARY_WEEKS[state.currentWeekIdx];
+            const currentWeekMarks = currentWeek.marksByChild[state.activeChildKey] || {};
+            const calc = calculateWeek(child, currentWeekMarks);
+            const totalXp = getTotalXp(state.activeChildKey);
+            const levelInfo = calculateLevelInfo(totalXp);
+            const weekKey = currentWeek.dateRange;
+            const record = db[state.activeChildKey].weeks[weekKey] || { amount: calc.totalPayout, paid: false, note: "" };
+
+            box.innerHTML = `
+                <!-- ШАПКА NEO-FINTECH -->
+                <div class="pm-topbar">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 20px;">💰</span>
+                            <div>
+                                <div style="font-size: 15px; font-weight: 800; color: #0f172a;">Карманные деньги</div>
+                                <div style="font-size: 11px; color: #64748b; font-weight: 600;">Neo-Fintech • ${child.name}</div>
+                            </div>
+                        </div>
+                        <button onclick="toggleSidebar()" style="background: none; border: none; font-size: 20px; font-weight: 700; cursor: pointer; color: #64748b; padding: 4px 8px; border-radius: 6px;">✕</button>
+                    </div>
+
+                    <!-- 3 НАВИГАЦИОННЫЕ ВКЛАДКИ -->
+                    <div class="pm-nav-tabs">
+                        <button class="pm-tab-btn ${state.activeTab === 'calc' ? 'active' : ''}" onclick="setTab('calc')">
+                            📊 Расчёт
+                        </button>
+                        <button class="pm-tab-btn ${state.activeTab === 'pay' ? 'active' : ''}" onclick="setTab('pay')">
+                            💳 Оплата
+                        </button>
+                        <button class="pm-tab-btn ${state.activeTab === 'settings' ? 'active' : ''}" onclick="setTab('settings')">
+                            ⚙️ Настройки
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ТЕЛО ВКЛАДКИ -->
+                <div class="pm-content-scroll">
+                    ${state.activeTab === 'calc' ? renderTabCalc(child, levelInfo, calc, record, currentWeek) : ''}
+                    ${state.activeTab === 'pay' ? renderTabPay(child, calc, record, currentWeek) : ''}
+                    ${state.activeTab === 'settings' ? renderTabSettings(child, levelInfo) : ''}
+                </div>
+            `;
+
+            renderXpModal(child, levelInfo);
+        }
+
+        function renderTabCalc(child, levelInfo, calc, record, currentWeek) {
+            return `
+                <!-- ГЕЙМИФИКАЦИЯ: Кликабельная плашка уровня и XP -->
+                <div class="pm-card" style="background: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer;"
+                     onclick="openXpModal()" title="Нажмите для просмотра истории начислений XP">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 13px; font-weight: 800; color: #0f172a;">⭐ Уровень ${levelInfo.level}: ${levelInfo.levelTitle}</span>
+                        <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 10px;">
+                            📜 История XP
+                        </span>
+                    </div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 5px;">
+                        Опыт: <b>${levelInfo.currentLevelXp} / ${levelInfo.nextLevelXp} XP</b> (Всего: <b>${levelInfo.totalXp} XP</b>)
+                    </div>
+                    <div style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
+                        <div style="background: #0284c7; width: ${(levelInfo.currentLevelXp / levelInfo.nextLevelXp)*100}%; height: 100%; border-radius: 3px;"></div>
+                    </div>
+                </div>
+
+                <!-- ШАПКА НЕДЕЛИ С БЫСТРОЙ НАВИГАЦИЕЙ -->
+                <div class="pm-card" style="padding: 10px 14px; background: #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                    <button class="pm-pill" style="padding: 6px 10px; font-size: 12px;" onclick="navWeek(-1)" title="Предыдущая неделя">
+                        ◀ Пред.
+                    </button>
+                    <div style="text-align: center;">
+                        <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Текущая неделя дневника</div>
+                        <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 1px;">
+                            📅 ${currentWeek.dateRange}
+                        </div>
+                    </div>
+                    <button class="pm-pill" style="padding: 6px 10px; font-size: 12px;" onclick="navWeek(1)" title="Следующая неделя">
+                        След. ▶
+                    </button>
+                </div>
+
+                <!-- ИТОГИ НЕДЕЛИ -->
+                <div class="pm-card">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 12px; color: #64748b;">Базовый доход (B24 = ${child.age} × ${child.inflationCoeff}):</span>
+                        <span style="font-size: 13px; font-weight: 800;">${calc.baseIncome} ₽</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 12px; color: #64748b;">Заработок за оценки (Строка 24):</span>
+                        <span style="font-size: 13px; font-weight: 800; color: ${calc.totalRublesEarnings >= 0 ? '#16a34a' : '#dc2626'};">
+                            ${calc.totalRublesEarnings >= 0 ? '+' : ''}${calc.totalRublesEarnings} ₽
+                        </span>
+                    </div>
+                    <hr style="border: none; border-top: 1px dashed #cbd5e1; margin: 10px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 800; color: #0f172a;">Итого к выплате (Строка 25):</div>
+                            <div style="font-size: 11px; color: #64748b;">${currentWeek.dateRange}</div>
+                        </div>
+                        <span style="font-size: 26px; font-weight: 900; color: #16a34a;">${calc.totalPayout} ₽</span>
+                    </div>
+                </div>
+
+                <!-- SMART LEDGER (СТРОКА 26): Факт выплаты -->
+                <div class="pm-card" style="background: ${record.paid ? '#f0fdf4' : '#f8fafc'}; border-color: ${record.paid ? '#86efac' : '#e2e8f0'};">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #64748b; margin-bottom: 4px;">Журнал выплат (Строка 26)</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 800; color: ${record.paid ? '#166534' : '#0f172a'};">
+                                ${record.paid ? `✅ Выплачено: ${record.amount} ₽` : `⏳ Ожидает: ${calc.totalPayout} ₽`}
+                            </div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                                ${record.note || 'Статус не подтверждён'}
+                            </div>
+                        </div>
+                        <button class="pm-pill" style="background: #ffffff;" onclick="togglePaid(${calc.totalPayout})">
+                            ${record.paid ? 'Сбросить' : 'Подтвердить'}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- АЧИВКИ НЕДЕЛИ -->
+                ${calc.achievements.length > 0 ? `
+                    <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 6px;">Достижения недели</div>
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px;">
+                        ${calc.achievements.map(a => `
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; display: flex; align-items: center; gap: 8px; font-size: 12px;">
+                                <span style="font-size: 16px;">${a.icon}</span>
+                                <div><b>${a.title}</b> — <span style="color: #64748b;">${a.desc}</span></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <!-- ПРЕДМЕТЫ С ОЦЕНКАМИ И ПООЦЕНОЧНЫМ ВКЛАДОМ -->
+                <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 6px;">
+                    Оценки за неделю и их денежный вклад (Норматив 3.7)
+                </div>
+
+                ${!calc.hasMarks ? `
+                    <div class="pm-card" style="text-align: center; padding: 20px 14px; background: #ffffff;">
+                        <div style="font-size: 24px; margin-bottom: 6px;">📖</div>
+                        <div style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 4px;">На этой неделе оценок пока нет</div>
+                        <div style="font-size: 11px; color: #64748b;">
+                            Заработок за оценки равен 0 ₽. К выплате гарантирован базовый доход: <b>${calc.baseIncome} ₽</b>.
+                        </div>
+                    </div>
+                ` : `
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${calc.activeSubjects.map(s => `
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <div>
+                                        <span style="font-size: 13px; font-weight: 800; color: #0f172a;">${s.name}</span>
+                                        <span style="font-size: 11px; color: #64748b; margin-left: 4px;">(коэфф: ${s.coeff}, ср.балл: <b>${s.avg}</b>)</span>
+                                    </div>
+                                    <span style="font-weight: 800; font-size: 13px; color: ${s.moneyRub >= 0 ? '#16a34a' : '#dc2626'};">
+                                        ${s.moneyRub >= 0 ? '+' : ''}${s.moneyRub} ₽
+                                    </span>
+                                </div>
+
+                                <!-- Пооценочные бейджи -->
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                    ${s.marks.map(m => `
+                                        <div style="display: inline-flex; align-items: center; background: ${m.markDeltaRub >= 0 ? '#f0fdf4' : '#fef2f2'}; border: 1px solid ${m.markDeltaRub >= 0 ? '#bbf7d0' : '#fecaca'}; border-radius: 6px; padding: 2px 6px; font-size: 11px;">
+                                            <b style="color: ${m.val >= 4 ? '#166534' : (m.val === 3 ? '#854d0e' : '#991b1b')}; margin-right: 4px; font-size: 12px;">
+                                                ${m.val}${m.weight > 1 ? `<span style="font-size: 9px; opacity: 0.7;">×${m.weight}</span>` : ''}
+                                            </b>
+                                            <span style="font-weight: 700; color: ${m.markDeltaRub >= 0 ? '#15803d' : '#b91c1c'};">
+                                                ${m.markDeltaRub >= 0 ? '+' : ''}${m.markDeltaRub} ₽
+                                            </span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            `;
+        }
+
+        // ВКЛАДКА 2: ОПЛАТА БЕЗ КНОПОК КОПИРОВАНИЯ
+        function renderTabPay(child, calc, record, currentWeek) {
+            const amt = record.paid ? record.amount : calc.totalPayout;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://qr.nspk.ru/pm-${amt}&margin=2`;
+
+            return `
+                <div style="text-align: center; padding: 16px 0;">
+                    <div style="font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Сумма к переводу (${currentWeek.dateRange})</div>
+                    <div style="font-size: 42px; font-weight: 900; color: #16a34a; margin: 8px 0;">${amt} ₽</div>
+                    <div style="font-size: 13px; color: #475569; margin-bottom: 20px;">
+                        Получатель: <b style="color: #0f172a;">${child.name}</b>
+                    </div>
+
+                    <!-- QR СБП -->
+                    <div style="background: #ffffff; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; display: inline-block; box-shadow: 0 4px 16px rgba(0,0,0,0.06); margin-bottom: 20px;">
+                        <img src="${qrUrl}" width="180" height="180" alt="QR СБП" style="display: block; border-radius: 4px;" />
+                        <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 10px;">Сканируйте приложением любого банка</div>
+                    </div>
+
+                    <!-- КНОПКА ФИКСАЦИИ ВЫПЛАТЫ (СТРОКА 26) -->
+                    <div style="max-width: 320px; margin: 0 auto;">
+                        <button style="width: 100%; padding: 14px; border-radius: 10px; background: ${record.paid ? '#0284c7' : '#16a34a'}; color: #ffffff; font-size: 13px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.12);"
+                                onclick="togglePaid(${calc.totalPayout})">
+                            ${record.paid ? '✅ Выплата зафиксирована (Сбросить)' : 'Подтвердить перевод (Строка 26)'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ВКЛАДКА 3: НАСТРОЙКИ (БЕЗ РАЗДЕЛА ИСТОЧНИК ОЦЕНОК)
+        function renderTabSettings(child, levelInfo) {
+            return `
+                <!-- Ребенок -->
+                <div class="pm-card">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #64748b; margin-bottom: 6px;">Ребёнок (автоопределение)</div>
+                    <div style="display: flex; gap: 6px;">
+                        ${Object.keys(presets).map(k => `
+                            <button class="pm-pill ${state.activeChildKey === k ? 'active' : ''}" style="flex: 1; text-align: center; border: 1px solid #cbd5e1; ${state.activeChildKey === k ? `background: #0284c7; color: white;` : 'background: white; color: #334155;'}" onclick="selectChild('${k}')">
+                                ${k}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Профиль XP -->
+                <div class="pm-card">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #64748b; margin-bottom: 4px;">Профиль геймификации</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div>
+                            <div style="font-size: 14px; font-weight: 800; color: #0f172a;">Уровень ${levelInfo.level}: ${levelInfo.levelTitle}</div>
+                            <div style="font-size: 11px; color: #64748b;">Всего начислено: <b>${levelInfo.totalXp} XP</b></div>
+                        </div>
+                        <button class="pm-pill" style="font-size: 11px;" onclick="openXpModal()">Журнал XP</button>
+                    </div>
+                </div>
+
+                <!-- Копилка цели (Геймификация) -->
+                <div class="pm-card">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #64748b; margin-bottom: 4px;">Финансовая цель (Копилка)</div>
+                    <div style="font-size: 13px; font-weight: 800; margin-bottom: 2px;">🎯 ${child.targetGoal.title}</div>
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 6px;">
+                        Накоплено: <b>${child.targetGoal.saved} ₽</b> из <b>${child.targetGoal.target} ₽</b> (${Math.round((child.targetGoal.saved / child.targetGoal.target)*100)}%)
+                    </div>
+                    <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 6px;">
+                        <div style="background: #16a34a; width: ${(child.targetGoal.saved / child.targetGoal.target)*100}%; height: 100%;"></div>
+                    </div>
+                    <div style="font-size: 11px; color: #16a34a; font-weight: 700;">
+                        ⏳ При среднем доходе осталось ~${Math.ceil((child.targetGoal.target - child.targetGoal.saved) / 200)} недель!
+                    </div>
+                </div>
+
+                <!-- Формула расчёта -->
+                <div class="pm-card" style="font-size: 12px;">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #64748b; margin-bottom: 6px;">Параметры формулы</div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Возраст / Класс:</span><b>${child.age} лет (${child.classNum} класс)</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Коэфф. инфляции:</span><b>${child.inflationCoeff}</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>Базовая ставка (B24):</span><b>${Math.round(child.age * child.inflationCoeff * 100) / 100} ₽</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Стоимость 1 балла дельты:</span><b>${Math.round((child.age * child.inflationCoeff * 0.2) * 100) / 100} ₽</b>
+                    </div>
+                </div>
+
+                <!-- Резервное копирование (JSON) -->
+                <div class="pm-card">
+                    <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #64748b; margin-bottom: 4px;">Резервная копия (JSON)</div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">Сохранение истории выплат и XP без Excel.</div>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="pm-pill" style="flex: 1;" onclick="exportJSON()">📥 Экспорт JSON</button>
+                        <button class="pm-pill" style="flex: 1;" onclick="alert('Импорт JSON активен!')">📤 Импорт JSON</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderXpModal(child, levelInfo) {
+            const root = document.getElementById('pm-xp-modal-root');
+            if (!state.showXpModal) {
+                root.innerHTML = '';
+                return;
+            }
+
+            const history = db[state.activeChildKey]?.xpLedger || [];
+
+            root.innerHTML = `
+                <div class="pm-modal-backdrop" onclick="if(event.target === this) closeXpModal()">
+                    <div class="pm-modal-window">
+                        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                            <div>
+                                <div style="font-size: 15px; font-weight: 800; color: #0f172a;">⭐ Журнал начисления XP</div>
+                                <div style="font-size: 12px; color: #64748b;">${child.name} • Уровень ${levelInfo.level} (${levelInfo.levelTitle})</div>
+                            </div>
+                            <button onclick="closeXpModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
+                        </div>
+
+                        <div style="padding: 16px 20px; overflow-y: auto; flex: 1;">
+                            <div style="background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 12px; color: #0369a1;">
+                                Каждые <b>200 XP</b> повышают уровень персонажа. Опыт начисляется за успешные недели без долгов и высокие оценки.
+                            </div>
+
+                            ${history.length === 0 ? `
+                                <div style="text-align: center; padding: 24px 0; color: #64748b; font-size: 13px;">
+                                    История начислений пока пуста.<br>Опыт начисляется при подтверждении выплат за неделю!
+                                </div>
+                            ` : `
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    ${history.map(item => `
+                                        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: #ffffff;">
+                                            <div>
+                                                <div style="font-size: 13px; font-weight: 700; color: #0f172a;">${item.reason}</div>
+                                                <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                                                    📅 ${item.week || item.date} • ${item.date}
+                                                </div>
+                                            </div>
+                                            <span style="font-weight: 800; font-size: 14px; color: #16a34a; background: #dcfce7; padding: 3px 8px; border-radius: 6px;">
+                                                +${item.amount} XP
+                                            </span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `}
+                        </div>
+
+                        <div style="padding: 12px 20px; border-top: 1px solid #e2e8f0; text-align: right; background: #f8fafc;">
+                            <button class="pm-pill active" onclick="closeXpModal()">Закрыть</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setTab(t) { state.activeTab = t; renderSidebar(); }
+        function openXpModal() { state.showXpModal = true; renderSidebar(); }
+        function closeXpModal() { state.showXpModal = false; renderSidebar(); }
+
+        function navWeek(direction) {
+            const nextIdx = state.currentWeekIdx + direction;
+            if (nextIdx >= 0 && nextIdx < DIARY_WEEKS.length) {
+                state.currentWeekIdx = nextIdx;
+                updateDiaryView();
+                renderSidebar();
+            } else {
+                alert(direction < 0 ? 'Это первая доступная неделя дневника.' : 'Это последняя доступная неделя дневника.');
+            }
+        }
+
+        function selectChild(key) {
+            state.activeChildKey = key;
+            document.querySelectorAll('.selection-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.includes(key));
+            });
+            updateDiaryView();
+            renderSidebar();
+        }
+
+        function togglePaid(amt) {
+            const currentWeek = DIARY_WEEKS[state.currentWeekIdx];
+            const weekKey = currentWeek.dateRange;
+            if (!db[state.activeChildKey].weeks[weekKey]) {
+                db[state.activeChildKey].weeks[weekKey] = { amount: amt, paid: false, note: "" };
+            }
+            const cur = db[state.activeChildKey].weeks[weekKey];
+            cur.paid = !cur.paid;
+            cur.note = cur.paid ? "Выплачено" : "";
+
+            if (cur.paid) {
+                // Добавляем запись в XP
+                const exists = db[state.activeChildKey].xpLedger.some(x => x.week === weekKey);
+                if (!exists) {
+                    db[state.activeChildKey].xpLedger.unshift({
+                        id: "xp_" + Date.now(),
+                        date: new Date().toISOString().split('T')[0],
+                        week: weekKey,
+                        amount: 50,
+                        reason: `Успешная неделя в плюсе (${weekKey})`
+                    });
+                }
+            }
+            renderSidebar();
+        }
+
+        function toggleSidebar() {
+            state.isOpen = !state.isOpen;
+            renderSidebar();
+        }
+
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Карманные_деньги_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        updateDiaryView();
+        renderSidebar();
+    </script>
+</body>
+</html>

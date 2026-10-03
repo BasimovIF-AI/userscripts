@@ -1,0 +1,14 @@
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Release archives
+*.zip
+archives/
+
+# Temporary & Editor files
+*.log
+.vscode/
+.idea/
+*.tmp

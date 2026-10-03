@@ -1,0 +1,14 @@
+# Build and archives
+archives/
+*.zip
+
+# Secrets and environment
+.env
+.env.*
+*.enc
+credentials.*
+
+# Temporary and system
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Витрина 10 дизайнов: Карманные деньги</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+            padding: 24px;
+        }
+        .header {
+            max-width: 1200px;
+            margin: 0 auto 24px auto;
+            background: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .header h1 { font-size: 22px; color: #0f172a; }
+        .header p { font-size: 14px; color: #64748b; margin-top: 4px; }
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid #cbd5e1;
+            background: white;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-tab:hover { background: #f8fafc; }
+        .btn-tab.active { background: #0284c7; color: white; border-color: #0284c7; }
+
+        /* Навигационная полоса 10 вариантов */
+        .designs-nav {
+            max-width: 1200px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .design-btn {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            background: white;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .design-btn:hover { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }
+        .design-btn.active { background: #0284c7; color: white; border-color: #0284c7; }
+
+        /* Контейнер для показа */
+        .showcase-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .design-card-wrapper {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            margin-bottom: 30px;
+        }
+        .design-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        /* Общие UI элементы */
+        .pm-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .pm-btn {
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid #cbd5e1;
+            background: white;
+            color: #334155;
+            transition: all 0.2s;
+        }
+        .pm-btn:hover { background: #f8fafc; }
+        .pm-btn-primary { background: #0284c7; color: white; border: none; }
+        .pm-btn-primary:hover { background: #0369a1; }
+        .pm-btn-success { background: #16a34a; color: white; border: none; }
+        .pm-btn-success:hover { background: #15803d; }
+        .pm-badge-bonus { background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+        .pm-badge-penalty { background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+        .pm-badge-neutral { background: #f1f5f9; color: #64748b; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>🎨 Витрина 10 вариантов дизайна дашборда</h1>
+            <p>Выберите дизайн, который вам визуально больше всего нравится. Расчёты и логика останутся прежними.</p>
+        </div>
+        <div class="mode-toggle">
+            <button id="btn-mode-tabs" class="btn-tab active" onclick="setMode('tabs')">Режим вкладок</button>
+            <button id="btn-mode-all" class="btn-tab" onclick="setMode('all')">Показать все 10 разом (лента)</button>
+        </div>
+    </div>
+
+    <!-- Навигация 10 кнопок -->
+    <div id="nav-tabs-bar" class="designs-nav">
+        <button class="design-btn active" onclick="showDesign(1)">1. 👔 Семейный штаб</button>
+        <button class="design-btn" onclick="showDesign(2)">2. 💳 Финтех-Банк (Junior)</button>
+        <button class="design-btn" onclick="showDesign(3)">3. ⚔️ RPG Профиль Героя</button>
+        <button class="design-btn" onclick="showDesign(4)">4. 📊 Академический журнал</button>
+        <button class="design-btn" onclick="showDesign(5)">5. 📋 Канбан выплат</button>
+        <button class="design-btn" onclick="showDesign(6)">6. 📱 Недельные Истории</button>
+        <button class="design-btn" onclick="showDesign(7)">7. 🎯 Целевая копилка</button>
+        <button class="design-btn" onclick="showDesign(8)">8. ⏳ Интерактивный Таймлайн</button>
+        <button class="design-btn" onclick="showDesign(9)">9. 👨‍👩‍👧‍👦 Семейная матрица</button>
+        <button class="design-btn" onclick="showDesign(10)">10. ⚡ Компактный информер</button>
+    </div>
+
+    <div class="showcase-container">
+
+        <!-- ВАРИАНТ 1: Семейный штаб -->
+        <div id="design-1" class="design-card-wrapper">
+            <div class="design-badge">Вариант 1: Семейный штаб (Executive Split)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Двухколоночный макет: слева карточки расчёта и таблица оценок, справа — QR-код для оплаты и мотивационный блок.
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 320px; gap: 18px;">
+                <div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px;">
+                        <div class="pm-card" style="border-left: 4px solid #0284c7;">
+                            <div style="color: #64748b; font-size: 12px; font-weight: 600;">Базовый доход (A25×A26)</div>
+                            <div style="font-size: 22px; font-weight: 800; margin-top: 4px;">174.79 ₽</div>
+                            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">14 лет × 12.485</div>
+                        </div>
+                        <div class="pm-card" style="border-left: 4px solid #16a34a;">
+                            <div style="color: #64748b; font-size: 12px; font-weight: 600;">Заработок за оценки</div>
+                            <div style="font-size: 22px; font-weight: 800; margin-top: 4px; color: #16a34a;">+65 ₽</div>
+                            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Коэф недели: 1.9</div>
+                        </div>
+                        <div class="pm-card" style="border-left: 4px solid #6366f1; background: #f8fafc;">
+                            <div style="color: #64748b; font-size: 12px; font-weight: 600;">Итого к выплате</div>
+                            <div style="font-size: 24px; font-weight: 900; color: #0284c7; margin-top: 4px;">239 ₽</div>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Целевой балл: 3.7</div>
+                        </div>
+                    </div>
+
+                    <div class="pm-card" style="margin-bottom: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="font-weight: 700; font-size: 15px;">📚 Оценки недели (С3)</div>
+                            <span style="font-size: 12px; color: #64748b;">Норматив: 3.7</span>
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #e2e8f0; color: #64748b; text-align: left;">
+                                    <th style="padding: 6px;">Предмет</th>
+                                    <th style="padding: 6px; text-align: center;">Вес</th>
+                                    <th style="padding: 6px; text-align: center;">Ср. балл</th>
+                                    <th style="padding: 6px; text-align: right;">Вклад в премию</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px; font-weight: 600;">Алгебра</td><td style="padding: 6px; text-align: center;">2.0</td><td style="padding: 6px; text-align: center;">5.0</td><td style="padding: 6px; text-align: right;"><span class="pm-badge-bonus">+2.6</span></td></tr>
+                                <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px; font-weight: 600;">Химия</td><td style="padding: 6px; text-align: center;">1.0</td><td style="padding: 6px; text-align: center;">4.0</td><td style="padding: 6px; text-align: right;"><span class="pm-badge-bonus">+0.3</span></td></tr>
+                                <tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 6px; font-weight: 600;">Русский язык</td><td style="padding: 6px; text-align: center;">2.0</td><td style="padding: 6px; text-align: center;">2.5</td><td style="padding: 6px; text-align: right;"><span class="pm-badge-penalty">-4.8</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <div style="color: #166534; font-weight: 700; font-size: 14px;">✅ Выплачено: 230 ₽</div>
+                            <div style="color: #64748b; font-size: 12px;">Дата: 2026-09-22 (Выплачено)</div>
+                        </div>
+                        <button class="pm-btn" style="font-size: 12px;">✏️ Изменить</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="pm-card" style="text-align: center; margin-bottom: 14px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">🚀 Fast Pay (QR СБП)</div>
+                        <div style="font-size: 26px; font-weight: 800; color: #16a34a; margin: 8px 0;">230 ₽</div>
+                        <div style="width: 130px; height: 130px; background: #e2e8f0; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 700; color: #475569;">[QR КОД СБП]</div>
+                        <button class="pm-btn pm-btn-primary" style="font-size: 12px; width: 100%;">📋 Скопировать 230 ₽</button>
+                    </div>
+                    <div class="pm-card">
+                        <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">🌟 Мотивация недели</div>
+                        <div style="font-size: 12px; color: #166534; background: #f0fdf4; padding: 6px; border-radius: 6px;">🏆 Лидеры: Алгебра (+2.6), Английский (+1.3)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВАРИАНТ 2: Финтех-Банк -->
+        <div id="design-2" class="design-card-wrapper">
+            <div class="design-badge">Вариант 2: Финтех-Банк (Neobank Junior)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Стиль современных мобильных банков (Т-Банк / Сбер Джуниор): темная карта с градиентом, крупные метрики баланса и быстрая оплата в фокусе.
+            </div>
+            <div style="max-width: 680px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #0284c7, #0f172a); border-radius: 16px; padding: 24px; color: white; margin-bottom: 18px; box-shadow: 0 8px 20px rgba(2,132,199,0.25);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div style="font-size: 13px; color: #bae6fd;">Баланс за неделю С3</div>
+                            <div style="font-size: 38px; font-weight: 900; margin: 4px 0;">239 ₽</div>
+                            <div style="font-size: 13px; color: #e0f2fe;">Басимова Юлиана • Junior Card</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">
+                            +65 ₽ премия
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+                    <div class="pm-card" style="text-align: center;">
+                        <div style="font-size: 11px; color: #64748b; font-weight: 600;">БАЗОВЫЙ ДОХОД</div>
+                        <div style="font-size: 22px; font-weight: 700; margin-top: 4px;">174.79 ₽</div>
+                    </div>
+                    <div class="pm-card" style="text-align: center;">
+                        <div style="font-size: 11px; color: #64748b; font-weight: 600;">ПРЕМИЯ ЗА ОЦЕНКИ</div>
+                        <div style="font-size: 22px; font-weight: 700; margin-top: 4px; color: #16a34a;">+65 ₽</div>
+                    </div>
+                </div>
+
+                <div class="pm-card" style="text-align: center; margin-bottom: 16px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #64748b;">ПЕРЕВОД ПО СБП В ОДИН КЛИК</div>
+                    <div style="font-size: 26px; font-weight: 800; color: #16a34a; margin: 8px 0;">230 ₽</div>
+                    <div style="width: 140px; height: 140px; background: #f1f5f9; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 700; color: #475569;">[QR СБП]</div>
+                    <button class="pm-btn pm-btn-success" style="padding: 10px 20px; font-weight: 700;">✅ Отметить выплату (230 ₽)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВАРИАНТ 3: RPG Профиль Героя -->
+        <div id="design-3" class="design-card-wrapper">
+            <div class="design-badge">Вариант 3: RPG Профиль Героя (Hero Sheet & XP)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Геймифицированный интерфейс: аватар персонажа, уровень, шкала опыта XP за баллы выше 3.7, боевые ачивки и награда в золотых монетах.
+            </div>
+            <div style="background: #1e1e2f; color: #f8fafc; border-radius: 14px; padding: 20px; margin-bottom: 18px;">
+                <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 20px;">
+                    <div style="width: 70px; height: 70px; border-radius: 50%; background: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 34px; border: 2px solid #a855f7;">🧙‍♀️</div>
+                    <div>
+                        <div style="font-size: 22px; font-weight: 800; color: #fbbf24;">Герой: Юлиана</div>
+                        <div style="font-size: 13px; color: #94a3b8;">Уровень 14 • Маг Знаний (Неделя С3)</div>
+                        <div style="margin-top: 6px; width: 220px; height: 8px; background: #334155; border-radius: 4px; overflow: hidden;">
+                            <div style="width: 85%; height: 100%; background: linear-gradient(90deg, #10b981, #3b82f6);"></div>
+                        </div>
+                    </div>
+                    <div style="margin-left: auto; text-align: right;">
+                        <div style="font-size: 11px; color: #94a3b8;">Награда за квест:</div>
+                        <div style="font-size: 28px; font-weight: 900; color: #4ade80;">💰 239 Монет (₽)</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                    <div style="background: #27273f; padding: 12px; border-radius: 8px; border: 1px solid #3f3f63;">
+                        <div style="font-size: 14px;">⚔️ Сила недели</div>
+                        <div style="font-weight: 700; color: #38bdf8; margin-top: 2px;">+1.9 Коэф</div>
+                    </div>
+                    <div style="background: #27273f; padding: 12px; border-radius: 8px; border: 1px solid #3f3f63;">
+                        <div style="font-size: 14px;">🛡️ Стойкость</div>
+                        <div style="font-weight: 700; color: #f59e0b; margin-top: 2px;">174.79 База</div>
+                    </div>
+                    <div style="background: #27273f; padding: 12px; border-radius: 8px; border: 1px solid #3f3f63;">
+                        <div style="font-size: 14px;">🏆 Трофей</div>
+                        <div style="font-weight: 700; color: #ec4899; margin-top: 2px;">Алгебра (+2.6 XP)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВАРИАНТ 4: Академический журнал -->
+        <div id="design-4" class="design-card-wrapper">
+            <div class="design-badge">Вариант 4: Академический журнал (Data Grid Classic)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Классическая ведомость строго в стиле электронных таблиц со всеми буквами колонок (A, B, F, G, H) и строками итогов 23–25.
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #cbd5e1; margin-bottom: 16px;">
+                <thead style="background: #f1f5f9;">
+                    <tr>
+                        <th style="border: 1px solid #cbd5e1; padding: 6px;">Коэф (A)</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Предмет (B)</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 6px;">Сумма баллов (F)</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 6px;">Вес (G)</th>
+                        <th style="border: 1px solid #cbd5e1; padding: 6px;">Дельта (H)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="border: 1px solid #e2e8f0; padding: 6px; text-align: center;">2.0</td><td style="border: 1px solid #e2e8f0; padding: 6px; font-weight: 600;">Алгебра</td><td style="border: 1px solid #e2e8f0; padding: 6px; text-align: center;">5.0</td><td style="border: 1px solid #e2e8f0; padding: 6px; text-align: center;">1.0</td><td style="border: 1px solid #e2e8f0; padding: 6px; text-align: center; color: #16a34a; font-weight: 700;">+2.6</td></tr>
+                    <tr><td style="border: 1px solid #e2e8f0; padding: 6px; text-align: center;">1.0</td><td style="border: 1px solid #e2e8f0; padding: 6px; font-weight: 600;">Химия</td><td style="border: 1px solid #e2e8f0; padding: 6px; text-align: center;">4.0</td><td style="border: 1px solid #e2e8f0; padding: 6px; text-align: center;">1.0</td><td style="border: 1px solid #e2e8f0; padding: 6px; text-align: center; color: #16a34a; font-weight: 700;">+0.3</td></tr>
+                    <tr style="background: #f8fafc; font-weight: 700;"><td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px; text-align: right;">Сумма коэффициентов (строка 23):</td><td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #0284c7;">1.9</td></tr>
+                    <tr style="background: #f8fafc; font-weight: 700;"><td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px; text-align: right;">Чистый заработок за оценки (строка 24):</td><td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">65 ₽</td></tr>
+                    <tr style="background: #e0f2fe; font-weight: 800; font-size: 13px;"><td colspan="4" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">ИТОГО К ВЫПЛАТЕ (строка 25):</td><td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; color: #0369a1;">239 ₽</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ВАРИАНТ 5: Канбан выплат -->
+        <div id="design-5" class="design-card-wrapper">
+            <div class="design-badge">Вариант 5: Канбан выплат (Kanban Pipeline)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Управление выплатами в виде трех колонок: Текущая в расчете, К выплате (ждет перевода) и Архив выплаченных.
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+                <div style="background: #f1f5f9; border-radius: 10px; padding: 14px;">
+                    <div style="font-weight: 700; font-size: 13px; margin-bottom: 10px; color: #475569;">🟡 Текущая неделя</div>
+                    <div class="pm-card"><div style="font-weight: 700;">Неделя С4</div><div style="font-size: 20px; font-weight: 800; color: #0284c7; margin: 6px 0;">239 ₽</div><div style="font-size: 11px; color: #64748b;">В процессе сбора оценок</div></div>
+                </div>
+                <div style="background: #fef3c7; border-radius: 10px; padding: 14px;">
+                    <div style="font-weight: 700; font-size: 13px; margin-bottom: 10px; color: #b45309;">⏳ К выплате</div>
+                    <div class="pm-card" style="border-left: 4px solid #f59e0b;"><div style="font-weight: 700;">Неделя С3</div><div style="font-size: 18px; font-weight: 800; margin: 4px 0;">239 ₽</div><button class="pm-btn pm-btn-success" style="width: 100%; font-size: 11px;">Перевести 239 ₽</button></div>
+                </div>
+                <div style="background: #dcfce7; border-radius: 10px; padding: 14px;">
+                    <div style="font-weight: 700; font-size: 13px; margin-bottom: 10px; color: #166534;">✅ Выплачено</div>
+                    <div class="pm-card" style="border-left: 4px solid #22c55e; margin-bottom: 8px;"><div style="font-weight: 700;">Неделя С2</div><div style="font-size: 18px; font-weight: 800; color: #166534;">198 ₽</div><div style="font-size: 11px; color: #64748b;">Выплачено 15 сен</div></div>
+                    <div class="pm-card" style="border-left: 4px solid #22c55e;"><div style="font-weight: 700;">Неделя С1</div><div style="font-size: 18px; font-weight: 800; color: #166534;">182 ₽</div><div style="font-size: 11px; color: #64748b;">Выплачено 08 сен</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВАРИАНТ 6: Недельные Истории -->
+        <div id="design-6" class="design-card-wrapper">
+            <div class="design-badge">Вариант 6: Недельные Истории (Stories & Highlights)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Формат презентационных сторис: ярко, лаконично, идеально показывать ребёнку на планшете или телефоне.
+            </div>
+            <div style="max-width: 520px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+                <div style="background: linear-gradient(180deg, #0284c7, #0369a1); padding: 24px; color: white; text-align: center;">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85;">ИТОГИ НЕДЕЛИ С3</div>
+                    <div style="font-size: 38px; font-weight: 900; margin: 8px 0;">+239 ₽</div>
+                    <div style="font-size: 14px;">Отличные успехи Юлианы!</div>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 12px; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                        <span style="font-size: 22px;">🚀</span><div><div style="font-weight: 700; font-size: 13px;">Прорыв недели</div><div style="font-size: 12px; color: #64748b;">Алгебра и Химия дали рекордный плюс!</div></div>
+                    </div>
+                    <button class="pm-btn pm-btn-primary" style="width: 100%; padding: 10px;">Показать QR на выплату</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВАРИАНТ 7: Целевая копилка -->
+        <div id="design-7" class="design-card-wrapper">
+            <div class="design-badge">Вариант 7: Целевая копилка (Goal & Piggy Bank)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Обучение сбережениям: автоматическое распределение выплаты — 40% на большую мечту (копилка), 60% на свободные карманные.
+            </div>
+            <div style="max-width: 640px; margin: 0 auto;">
+                <div class="pm-card" style="background: #f0fdf4; border: 1px solid #a7f3d0; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 12px; font-weight: 700; color: #047857; text-transform: uppercase;">🎯 Мечта Юлианы</div>
+                            <div style="font-size: 20px; font-weight: 800; color: #065f46; margin: 4px 0;">Новый планшет и стилус</div>
+                            <div style="font-size: 13px; color: #047857;">Собрано: 4 200 ₽ из 15 000 ₽ (28%)</div>
+                        </div>
+                        <div style="font-size: 38px;">🐷</div>
+                    </div>
+                    <div style="margin-top: 10px; height: 10px; background: #d1fae5; border-radius: 5px; overflow: hidden;">
+                        <div style="width: 28%; height: 100%; background: #10b981;"></div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div class="pm-card" style="border-left: 4px solid #10b981; text-align: center;">
+                        <div style="font-size: 12px; color: #64748b;">В КОПИЛКУ (40%)</div>
+                        <div style="font-size: 24px; font-weight: 800; color: #16a34a; margin-top: 4px;">+96 ₽</div>
+                    </div>
+                    <div class="pm-card" style="border-left: 4px solid #0284c7; text-align: center;">
+                        <div style="font-size: 12px; color: #64748b;">НА КАРМАННЫЕ (60%)</div>
+                        <div style="font-size: 24px; font-weight: 800; color: #0284c7; margin-top: 4px;">143 ₽</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВАРИАНТ 8: Интерактивный Таймлайн -->
+        <div id="design-8" class="design-card-wrapper">
+            <div class="design-badge">Вариант 8: Интерактивный Таймлайн (Timeline Ledger)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Хронологическая лента учебного года: визуализация прогресса и истории выплат от недели к неделе.
+            </div>
+            <div style="position: relative; padding-left: 24px; border-left: 3px solid #cbd5e1; max-width: 600px; margin: 0 auto;">
+                <div style="margin-bottom: 16px; position: relative;">
+                    <div style="position: absolute; left: -32px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #0284c7; border: 2px solid white;"></div>
+                    <div class="pm-card" style="background: #f0f9ff; border: 1px solid #bae6fd;">
+                        <div style="font-weight: 700; font-size: 14px;">Неделя С3 (15 сен – 21 сен)</div>
+                        <div style="font-size: 13px; margin-top: 4px;">К выплате: <b>239 ₽</b> <span class="pm-badge-bonus">Ожидает</span></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px; position: relative;">
+                    <div style="position: absolute; left: -32px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #22c55e; border: 2px solid white;"></div>
+                    <div class="pm-card">
+                        <div style="font-weight: 700; font-size: 14px;">Неделя С2 (8 сен – 14 сен)</div>
+                        <div style="font-size: 13px; margin-top: 4px;">Выплачено: <b>198 ₽</b> (15 сен)</div>
+                    </div>
+                </div>
+                <div style="position: relative;">
+                    <div style="position: absolute; left: -32px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: #22c55e; border: 2px solid white;"></div>
+                    <div class="pm-card">
+                        <div style="font-weight: 700; font-size: 14px;">Неделя С1 (1 сен – 7 сен)</div>
+                        <div style="font-size: 13px; margin-top: 4px;">Выплачено: <b>182 ₽</b> (08 сен)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВАРИАНТ 9: Семейная матрица -->
+        <div id="design-9" class="design-card-wrapper">
+            <div class="design-badge">Вариант 9: Семейная матрица (Все дети сразу)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Сводка сразу по всей семье: карточки Юлианы, Артёма и Дианы рядом, общий семейный бюджет и кнопки перевода каждому.
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 18px; border-radius: 8px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-weight: 700; font-size: 15px;">👨‍👩‍👧‍👦 Общий семейный бюджет недели:</div>
+                <div style="font-size: 18px; font-weight: 900; color: #16a34a;">554 ₽</div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+                <div class="pm-card" style="border-top: 4px solid #0284c7;">
+                    <div style="font-weight: 800; font-size: 15px;">Юлиана (14 лет)</div>
+                    <div style="font-size: 24px; font-weight: 900; color: #0284c7; margin: 6px 0;">239 ₽</div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">База: 174.79 ₽ | Оценки: +65 ₽</div>
+                    <button class="pm-btn pm-btn-success" style="width: 100%; font-size: 11px;">Перевести 239 ₽</button>
+                </div>
+                <div class="pm-card" style="border-top: 4px solid #6366f1;">
+                    <div style="font-weight: 800; font-size: 15px;">Артём (12 лет)</div>
+                    <div style="font-size: 24px; font-weight: 900; color: #6366f1; margin: 6px 0;">185 ₽</div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">База: 150.00 ₽ | Оценки: +35 ₽</div>
+                    <button class="pm-btn pm-btn-success" style="width: 100%; font-size: 11px;">Перевести 185 ₽</button>
+                </div>
+                <div class="pm-card" style="border-top: 4px solid #ec4899;">
+                    <div style="font-weight: 800; font-size: 15px;">Диана (8 лет)</div>
+                    <div style="font-size: 24px; font-weight: 900; color: #ec4899; margin: 6px 0;">130 ₽</div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">База: 100.00 ₽ | Оценки: +30 ₽</div>
+                    <button class="pm-btn pm-btn-success" style="width: 100%; font-size: 11px;">Перевести 130 ₽</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВАРИАНТ 10: Компактный информер -->
+        <div id="design-10" class="design-card-wrapper">
+            <div class="design-badge">Вариант 10: Компактный информер (Compact Minimalist)</div>
+            <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+                Ультраминимализм: одна строчка данных с кнопкой копирования, не закрывающая страницу.
+            </div>
+            <div class="pm-card" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                <div>
+                    <div style="font-size: 11px; color: #64748b; font-weight: 600;">УЧЕНИК / ПЕРИОД</div>
+                    <div style="font-size: 16px; font-weight: 800;">Юлиана • Неделя С3</div>
+                </div>
+                <div style="display: flex; gap: 20px;">
+                    <div><div style="font-size: 11px; color: #64748b;">База</div><div style="font-size: 16px; font-weight: 700;">174.79 ₽</div></div>
+                    <div><div style="font-size: 11px; color: #64748b;">Оценки</div><div style="font-size: 16px; font-weight: 700; color: #16a34a;">+65 ₽</div></div>
+                    <div><div style="font-size: 11px; color: #64748b;">Итого</div><div style="font-size: 18px; font-weight: 900; color: #0284c7;">239 ₽</div></div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="pm-btn pm-btn-primary">Скопировать 239 ₽</button>
+                    <button class="pm-btn pm-btn-success">✅ Выплачено</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentMode = 'tabs';
+
+        function showDesign(num) {
+            if (currentMode === 'all') return;
+            for (let i = 1; i <= 10; i++) {
+                const el = document.getElementById('design-' + i);
+                if (el) el.style.display = (i === num) ? 'block' : 'none';
+            }
+            const btns = document.querySelectorAll('.design-btn');
+            btns.forEach((b, idx) => {
+                if (idx + 1 === num) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnTabs = document.getElementById('btn-mode-tabs');
+            const btnAll = document.getElementById('btn-mode-all');
+            const navBar = document.getElementById('nav-tabs-bar');
+
+            if (mode === 'all') {
+                btnAll.classList.add('active');
+                btnTabs.classList.remove('active');
+                navBar.style.display = 'none';
+                for (let i = 1; i <= 10; i++) {
+                    const el = document.getElementById('design-' + i);
+                    if (el) el.style.display = 'block';
+                }
+            } else {
+                btnTabs.classList.add('active');
+                btnAll.classList.remove('active');
+                navBar.style.display = 'flex';
+                showDesign(1);
+            }
+        }
+
+        // По умолчанию показываем 1 вариант
+        showDesign(1);
+    </script>
+</body>
+</html>
