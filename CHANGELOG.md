@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [aistudio-folders - 1.8.8] - 2026-10-05
+### Fixed
+- **Protobuf-Native Drive Sync**: fixed `CreatePrompt` / `UpdatePrompt` HTTP 400 error by preserving Google MakerSuite protobuf envelopes via `findAndReplaceSyncPayload()`.
+- **Search Header Alignment**: aligned search bar strictly on the same baseline as the `History` title.
+- **Micro-Dots & Compact Scope Filters**: reduced font size to 9px, dots to 4px.
+
 ## [Monorepo 2.0.0] - 2026-10-04
 ### Added
 - Consolidated all standalone userscripts into a single monorepo structure:
